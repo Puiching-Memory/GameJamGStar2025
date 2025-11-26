@@ -14,12 +14,14 @@
     
     <!-- 组件样式 -->
     <link rel="stylesheet" href="css/components/status-bar.css">
+    <link rel="stylesheet" href="css/components/buff.css">
     <link rel="stylesheet" href="css/components/card.css">
     <link rel="stylesheet" href="css/components/hand.css">
     <link rel="stylesheet" href="css/components/drop-zone.css">
     <link rel="stylesheet" href="css/components/button.css">
     <link rel="stylesheet" href="css/components/modal.css">
     <link rel="stylesheet" href="css/components/log.css">
+    <link rel="stylesheet" href="css/components/tooltip.css">
     
     <!-- 动画样式 -->
     <link rel="stylesheet" href="css/animations/keyframes.css">
@@ -29,9 +31,8 @@
 </head>
 <body>
     <div class="game-container">
-        <header class="game-header">
-            <!-- 左侧：对手状态 -->
-            <div class="header-player-info opponent-header-info">
+        <!-- 左侧：对手状态 - 独立浮动区域 -->
+        <div class="header-player-info opponent-header-info floating-status">
                 <div class="player-name">🤖 对手</div>
                 <div class="stats-container">
                     <div class="health-bar-wrapper">
@@ -45,17 +46,19 @@
                         <div class="mana-fill" id="opponent-mana" style="width: 100%"></div>
                         <span class="mana-text" id="opponent-mana-text">3/3</span>
                     </div>
+                <!-- Buff显示 -->
+                <div class="buffs-container" id="opponent-buffs"></div>
                 </div>
             </div>
 
-            <!-- 中间：标题 -->
-            <div class="header-title">
+        <!-- 中间：标题 - 独立浮动区域 -->
+        <div class="header-title floating-title">
                 <h1>⚔️ Git竞技场</h1>
                 <div class="turn-number" id="turn-number">第 0 回合</div>
             </div>
 
-            <!-- 右侧：玩家状态 -->
-            <div class="header-player-info player-header-info">
+        <!-- 右侧：玩家状态 - 独立浮动区域 -->
+        <div class="header-player-info player-header-info floating-status">
                 <div class="player-name">👤 你</div>
                 <div class="stats-container">
                     <div class="health-bar-wrapper">
@@ -69,9 +72,10 @@
                         <div class="mana-fill" id="player-mana" style="width: 100%"></div>
                         <span class="mana-text" id="player-mana-text">3/3</span>
                     </div>
-                </div>
+                <!-- Buff显示 -->
+                <div class="buffs-container" id="player-buffs"></div>
             </div>
-        </header>
+        </div>
 
         <!-- 对手手牌区域 - 浮动窗口 -->
         <div class="hand-area" id="opponent-hand"></div>
@@ -130,6 +134,9 @@
     <!-- 核心模块 -->
     <script src="core/Player.js"></script>
     <script src="core/Card.js"></script>
+    <script src="core/Buff.js"></script>
+    <script src="core/GameMessage.js"></script>
+    <script src="core/GameMessageLog.js"></script>
     <script src="core/GameState.js"></script>
     
     <!-- 数据模块 -->
@@ -145,8 +152,10 @@
     <script src="ui/LogSystem.js"></script>
     <script src="ui/HealthBar.js"></script>
     <script src="ui/ManaDisplay.js"></script>
+    <script src="ui/BuffRenderer.js"></script>
     <script src="ui/CardRenderer.js"></script>
     <script src="ui/DisplayManager.js"></script>
+    <script src="ui/Tooltip.js"></script>
     
     <!-- 交互模块 -->
     <script src="interaction/DragDrop.js"></script>

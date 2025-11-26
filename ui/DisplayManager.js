@@ -14,10 +14,10 @@ class DisplayManager {
     update(gameState) {
         // 更新生命值
         if (this.components.playerHealthBar) {
-            this.components.playerHealthBar.update(gameState.player.health);
+            this.components.playerHealthBar.update(gameState.player.health, gameState.player.maxHealth);
         }
         if (this.components.opponentHealthBar) {
-            this.components.opponentHealthBar.update(gameState.opponent.health);
+            this.components.opponentHealthBar.update(gameState.opponent.health, gameState.opponent.maxHealth);
         }
 
         // 更新能量显示
@@ -26,6 +26,16 @@ class DisplayManager {
         }
         if (this.components.opponentManaDisplay) {
             this.components.opponentManaDisplay.update(gameState.opponent.mana, gameState.opponent.maxMana);
+        }
+
+        // 更新buff显示
+        if (this.components.buffRenderer) {
+            if (this.elements.playerBuffsEl) {
+                this.components.buffRenderer.update(this.elements.playerBuffsEl, gameState.player.buffs);
+            }
+            if (this.elements.opponentBuffsEl) {
+                this.components.buffRenderer.update(this.elements.opponentBuffsEl, gameState.opponent.buffs);
+            }
         }
 
         // 更新手牌（由外部控制，因为需要交互逻辑）

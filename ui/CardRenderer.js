@@ -65,6 +65,15 @@ class CardRenderer {
         playedCardEl.className = `played-card-in-zone ${player === 'player' ? 'player-card' : 'opponent-card'}`;
         playedCardEl.dataset.player = player;
         playedCardEl.innerHTML = this.buildCardHTML(card);
+        // 设置初始透明度为1（完全不透明）
+        playedCardEl.style.opacity = '1';
+        playedCardEl.dataset.opacity = '1';
+        // 设置初始颜色饱和度为1（完全饱和）
+        playedCardEl.style.filter = 'saturate(1)';
+        playedCardEl.dataset.saturation = '1';
+        // 设置初始生命周期（回合数）
+        const initialLifetime = 8; // 初始生命周期为8回合
+        playedCardEl.dataset.lifetime = initialLifetime.toString();
         return playedCardEl;
     }
 

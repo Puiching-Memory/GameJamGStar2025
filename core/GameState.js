@@ -35,10 +35,20 @@ class GameState {
 
     /**
      * 开始新回合
+     * @param {Function} logCallback - 可选的日志回调函数 (message, source) => void
      */
-    startTurn() {
+    startTurn(logCallback = null) {
         const currentPlayer = this.getCurrentPlayer();
+        const previousPlayer = this.getOpponent();
+        
+        // 处理上一个玩家回合结束时的buff
+        previousPlayer.processTurnEndBuffs();
+        
+        // 恢复能量
         currentPlayer.restoreMana();
+        
+        // 处理当前玩家回合开始时的buff
+        currentPlayer.processTurnStartBuffs(logCallback);
     }
 
     /**

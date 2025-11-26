@@ -22,6 +22,7 @@ class Game {
 
         // 交互模块
         this.dragDrop = null; // 稍后初始化
+        this.tooltip = null; // Tooltip系统
 
         // 拖拽状态
         this.draggedCard = null;
@@ -33,6 +34,7 @@ class Game {
         this.initializeElements();
         this.initializeComponents();
         this.setupEventListeners();
+        this.initializeTooltips();
     }
 
     /**
@@ -64,7 +66,9 @@ class Game {
             gameOverCloseBtn: document.getElementById('game-over-close-btn'),
             playerHeaderInfo: document.querySelector('.player-header-info'),
             opponentHeaderInfo: document.querySelector('.opponent-header-info'),
-            turnNumberEl: document.getElementById('turn-number')
+            turnNumberEl: document.getElementById('turn-number'),
+            playerBuffsEl: document.getElementById('player-buffs'),
+            opponentBuffsEl: document.getElementById('opponent-buffs')
         };
     }
 
@@ -96,12 +100,16 @@ class Game {
             this.elements.opponentManaTextEl
         );
 
+        // Buff渲染器
+        const buffRenderer = new BuffRenderer();
+
         // 显示管理器
         this.displayManager = new DisplayManager(this.elements, {
             playerHealthBar,
             opponentHealthBar,
             playerManaDisplay,
-            opponentManaDisplay
+            opponentManaDisplay,
+            buffRenderer
         });
 
         // 卡牌动画
@@ -155,6 +163,102 @@ class Game {
     }
 
     /**
+     * 初始化Tooltip系统
+     */
+    initializeTooltips() {
+        this.tooltip = new Tooltip();
+
+        // 为玩家血量条容器添加tooltip
+        const playerHealthWrapper = this.elements.playerHealthEl?.parentElement?.parentElement;
+        if (playerHealthWrapper) {
+            this.tooltip.attach(playerHealthWrapper, () => {
+                const player = this.gameState.player;
+                return `💚 生命值\n当前: ${player.health}/${player.maxHealth}\n\n生命值归零时游戏失败`;
+            }, { position: 'bottom' });
+        }
+
+        // 为对手血量条容器添加tooltip
+        const opponentHealthWrapper = this.elements.opponentHealthEl?.parentElement?.parentElement;
+        if (opponentHealthWrapper) {
+            this.tooltip.attach(opponentHealthWrapper, () => {
+                const opponent = this.gameState.opponent;
+                return `💚 对手生命值\n当前: ${opponent.health}/${opponent.maxHealth}\n\n将对手生命值降为0即可获胜`;
+            }, { position: 'bottom' });
+        }
+
+        // 为玩家能量条容器添加tooltip
+        const playerManaBar = this.elements.playerManaEl?.parentElement;
+        if (playerManaBar) {
+            this.tooltip.attach(playerManaBar, () => {
+                const player = this.gameState.player;
+                return `⚡ 能量值\n当前: ${player.mana}/${player.maxMana}\n\n每回合自动恢复，打出卡牌需要消耗能量`;
+            }, { position: 'bottom' });
+        }
+
+        // 为对手能量条容器添加tooltip
+        const opponentManaBar = this.elements.opponentManaEl?.parentElement;
+        if (opponentManaBar) {
+            this.tooltip.attach(opponentManaBar, () => {
+                const opponent = this.gameState.opponent;
+                return `⚡ 对手能量值\n当前: ${opponent.mana}/${opponent.maxMana}\n\n每回合自动恢复`;
+            }, { position: 'bottom' });
+        }
+
+        // 为回合数添加tooltip
+        if (this.elements.turnNumberEl) {
+            this.tooltip.attach(this.elements.turnNumberEl, () => {
+                return `📊 回合信息\n当前回合: ${this.gameState.turnNumber}\n\n回合数越高，每回合恢复的能量越多`;
+            }, { position: 'bottom' });
+        }
+
+        // 为Buff容器添加动态tooltip（会在updateDisplay时更新）
+        this.setupBuffTooltips();
+    }
+
+    /**
+     * 设置Buff的tooltip（动态更新）
+     */
+    setupBuffTooltips() {
+        // 使用MutationObserver监听buff容器的变化
+        if (this.elements.playerBuffsEl) {
+            this.observeBuffContainer(this.elements.playerBuffsEl, 'player');
+        }
+        if (this.elements.opponentBuffsEl) {
+            this.observeBuffContainer(this.elements.opponentBuffsEl, 'opponent');
+        }
+    }
+
+    /**
+     * 监听Buff容器变化并添加tooltip
+     */
+    observeBuffContainer(container, playerType) {
+        const observer = new MutationObserver(() => {
+            // 为所有buff项添加tooltip
+            const buffItems = container.querySelectorAll('.buff-item');
+            buffItems.forEach(buffEl => {
+                // 如果已经有tooltip事件监听器，跳过
+                if (buffEl.dataset.tooltipAttached) return;
+
+                const buffId = buffEl.dataset.buffId;
+                const player = playerType === 'player' ? this.gameState.player : this.gameState.opponent;
+                const buff = player.buffs.find(b => b.id === buffId);
+
+                if (buff) {
+                    this.tooltip.attach(buffEl, () => {
+                        return `${buff.icon} ${buff.name}\n${buff.description}\n剩余回合: ${buff.duration}`;
+                    }, { position: 'bottom', delay: 300 });
+                    buffEl.dataset.tooltipAttached = 'true';
+                }
+            });
+        });
+
+        observer.observe(container, {
+            childList: true,
+            subtree: true
+        });
+    }
+
+    /**
      * 开始游戏
      */
     startGame() {
@@ -192,8 +296,8 @@ class Game {
         this.updateTurnNumber();
 
         this.updateDisplay();
-        this.logSystem.addLog('🎮 游戏开始！');
-        this.logSystem.addLog('👤 你的回合！');
+        this.logSystem.addLog('游戏开始！', 'game');
+        this.logSystem.addLog('你的回合！', 'player');
     }
 
     /**
@@ -269,7 +373,7 @@ class Game {
     playCard(card) {
         if (this.gameState.turn !== 'player' || !this.gameState.gameStarted) return;
         if (this.gameState.player.mana < card.cost) {
-            this.logSystem.addLog('❌ 能量不足！');
+            this.logSystem.addLog('能量不足！', 'system');
             return;
         }
 
@@ -311,9 +415,9 @@ class Game {
     checkAutoEndTurn() {
         if (this.turnManager.canAutoEndTurn()) {
             if (this.gameState.player.hand.length > 0) {
-                this.logSystem.addLog(`⚡ 剩余能量(${this.gameState.player.mana})不足以打出任何卡牌，自动结束回合！`);
+                this.logSystem.addLog(`剩余能量(${this.gameState.player.mana})不足以打出任何卡牌，自动结束回合！`, 'system');
             } else {
-                this.logSystem.addLog('⚡ 手牌已空，自动结束回合！');
+                this.logSystem.addLog('手牌已空，自动结束回合！', 'system');
             }
 
             setTimeout(() => {
@@ -330,9 +434,14 @@ class Game {
     endTurn() {
         if (this.gameState.turn !== 'player' || !this.gameState.gameStarted) return;
 
-        this.turnManager.endTurn();
+        // 传递日志回调函数，用于记录buff效果
+        this.turnManager.endTurn((message, source) => {
+            if (this.logSystem) {
+                this.logSystem.addLog(message, source);
+            }
+        });
         this.elements.endTurnBtn.disabled = true;
-        this.logSystem.addLog('🤖 对手的回合！');
+        this.logSystem.addLog('对手的回合！', 'opponent');
 
         // 更新回合高亮
         this.updateTurnHighlight();
@@ -358,6 +467,9 @@ class Game {
 
         // 注意：能量恢复已经在 turnManager.endTurn() -> startOpponentTurn() -> startTurn() 中处理了
         // 这里不需要再次调用 restoreMana()
+
+        // 处理场上卡牌的透明度和删除（每回合执行）
+        this.processPlayedCardsFade();
 
         // 对手回合开始时抽一张牌（与玩家一致）
         this.gameState.opponent.drawCard(this.cardFactory.getRandomCard());
@@ -437,16 +549,24 @@ class Game {
      * 开始玩家回合
      */
     startPlayerTurn() {
-        this.turnManager.startPlayerTurn();
+        // 传递日志回调函数，用于记录buff效果
+        this.turnManager.startPlayerTurn((message, source) => {
+            if (this.logSystem) {
+                this.logSystem.addLog(message, source);
+            }
+        });
         // 玩家回合开始时增加回合数
         this.gameState.turnNumber++;
         this.updateTurnNumber();
         this.gameState.player.drawCard(this.cardFactory.getRandomCard());
         this.elements.endTurnBtn.disabled = false;
-        this.logSystem.addLog('👤 你的回合！');
+        this.logSystem.addLog('你的回合！', 'player');
 
         // 清除上一回合的卡牌高亮
         this.cardAnimation.clearTurnHighlights(this.gameState.currentTurnCards);
+
+        // 处理场上卡牌的透明度和删除
+        this.processPlayedCardsFade();
 
         // 更新回合高亮
         this.updateTurnHighlight();
@@ -456,15 +576,79 @@ class Game {
     }
 
     /**
+     * 处理场上卡牌的透明度和删除
+     * 每回合降低透明度和颜色饱和度，按生命周期删除卡牌
+     */
+    processPlayedCardsFade() {
+        if (!this.elements.playedCardsContainer) {
+            return;
+        }
+
+        const playedCards = Array.from(this.elements.playedCardsContainer.children);
+        const opacityDecrease = 0.15; // 每回合降低的透明度
+        const saturationDecrease = 0.15; // 每回合降低的颜色饱和度
+        const fadeOutDuration = 500; // 淡出动画时长（毫秒）
+
+        // 需要删除的卡牌列表
+        const cardsToRemove = [];
+
+        // 降低所有卡牌的透明度、颜色饱和度和生命周期
+        playedCards.forEach(cardEl => {
+            // 获取当前透明度，如果没有则默认为1
+            let currentOpacity = parseFloat(cardEl.style.opacity) || 1;
+            // 获取当前颜色饱和度，如果没有则默认为1
+            let currentSaturation = parseFloat(cardEl.dataset.saturation) || 1;
+            // 获取当前生命周期，如果没有则默认为初始值
+            let lifetime = parseFloat(cardEl.dataset.lifetime) || 8;
+            
+            // 降低生命周期
+            lifetime = lifetime - 1;
+            cardEl.dataset.lifetime = lifetime.toString();
+
+            // 如果生命周期<=0，先播放淡出动画，然后删除
+            if (lifetime <= 0) {
+                // 将透明度和饱和度设置为0，触发过渡动画
+                cardEl.style.opacity = '0';
+                cardEl.style.filter = 'saturate(0)';
+                cardEl.dataset.opacity = '0';
+                cardEl.dataset.saturation = '0';
+                
+                // 标记为待删除
+                cardsToRemove.push(cardEl);
+            } else {
+                // 正常降低透明度和饱和度
+                currentOpacity = Math.max(0, currentOpacity - opacityDecrease);
+                currentSaturation = Math.max(0, currentSaturation - saturationDecrease);
+                
+                cardEl.style.opacity = currentOpacity;
+                cardEl.dataset.opacity = currentOpacity.toString();
+                cardEl.style.filter = `saturate(${currentSaturation})`;
+                cardEl.dataset.saturation = currentSaturation.toString();
+            }
+        });
+
+        // 等待过渡动画完成后删除生命周期已耗尽的卡牌
+        if (cardsToRemove.length > 0) {
+            setTimeout(() => {
+                cardsToRemove.forEach(cardEl => {
+                    if (cardEl && cardEl.parentNode) {
+                        cardEl.remove();
+                    }
+                });
+            }, fadeOutDuration);
+        }
+    }
+
+    /**
      * 检查游戏结束
      */
     checkGameOver() {
         const winner = this.gameState.checkGameOver();
         if (winner === 'opponent') {
-            this.logSystem.addLog('💀 你被击败了！游戏结束！');
+            this.logSystem.addLog('你被击败了！游戏结束！', 'game');
             this.gameOver('opponent');
         } else if (winner === 'player') {
-            this.logSystem.addLog('🎉 你获胜了！恭喜！');
+            this.logSystem.addLog('你获胜了！恭喜！', 'game');
             this.gameOver('player');
         }
     }

@@ -6,7 +6,8 @@
 .main-layout {
     display: flex;
     flex: 1;
-    height: calc(100vh - 80px - 200px);
+    height: calc(100vh - 200px);
+    margin-top: 0; /* 浮动区域不再需要整体margin */
     overflow: hidden;
     gap: 0;
     padding: 0;
@@ -30,18 +31,21 @@
 }
 
 .center-controls {
+    position: fixed;
+    bottom: 220px; /* 放在玩家手牌上方 */
+    left: 50%;
+    transform: translateX(-50%);
     display: flex;
     gap: 15px;
     align-items: center;
     justify-content: center;
-    flex-shrink: 0;
-    position: relative;
-    z-index: 10;
-    margin-top: 10px;
-    padding: 10px;
+    padding: 12px 20px;
     background: rgba(0, 0, 0, 0.3);
-    border-radius: 15px;
     backdrop-filter: blur(10px);
+    border-radius: 15px;
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
 }
 
 .right-panel {

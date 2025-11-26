@@ -10,28 +10,31 @@ class TurnManager {
 
     /**
      * 开始玩家回合
+     * @param {Function} logCallback - 可选的日志回调函数 (message, source) => void
      */
-    startPlayerTurn() {
+    startPlayerTurn(logCallback = null) {
         this.gameState.turn = 'player';
-        this.gameState.startTurn();
+        this.gameState.startTurn(logCallback);
     }
 
     /**
      * 开始对手回合
+     * @param {Function} logCallback - 可选的日志回调函数 (message, source) => void
      */
-    startOpponentTurn() {
+    startOpponentTurn(logCallback = null) {
         this.gameState.turn = 'opponent';
-        this.gameState.startTurn();
+        this.gameState.startTurn(logCallback);
     }
 
     /**
      * 结束当前回合
+     * @param {Function} logCallback - 可选的日志回调函数 (message, source) => void
      */
-    endTurn() {
+    endTurn(logCallback = null) {
         if (this.gameState.turn === 'player') {
-            this.startOpponentTurn();
+            this.startOpponentTurn(logCallback);
         } else {
-            this.startPlayerTurn();
+            this.startPlayerTurn(logCallback);
         }
     }
 

@@ -16,6 +16,13 @@
     overflow-y: visible;
 }
 
+/* 对手手牌区域不使用hand-area的默认样式 */
+#opponent-hand.hand-area {
+    padding: 15px 20px;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 15px;
+}
+
 /* 玩家手牌区域 */
 #player-hand {
     display: flex;
@@ -109,12 +116,12 @@
 
 /* 对手手牌 - 自适应浮动窗口 */
 #opponent-hand {
-    position: fixed;
-    top: 130px;
-    left: 20px;
-    transform: scale(0.7);
+    position: fixed !important;
+    top: 180px !important; /* 放在对手状态栏下方，增加间距 */
+    left: 10px !important; /* 与对手状态栏左对齐 */
+    transform: scale(0.7) !important;
     transform-origin: top left;
-    display: flex;
+    display: flex !important;
     flex-direction: row;
     justify-content: center;
     align-items: flex-end;
@@ -122,19 +129,19 @@
     flex-wrap: nowrap;
     min-height: 180px;
     max-height: 200px;
-    padding: 15px 20px;
-    background: rgba(0, 0, 0, 0.4);
+    padding: 25px 20px 15px 20px !important; /* 增加上内边距，让卡牌与上边框有更多距离 */
+    background: rgba(0, 0, 0, 0.3) !important; /* 与状态栏相同的透明度 */
     backdrop-filter: blur(10px);
     border-radius: 15px;
-    border: 2px solid rgba(255, 255, 255, 0.2);
+    border: 2px solid rgba(255, 255, 255, 0.15); /* 与状态栏相同的边框透明度 */
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 20px rgba(102, 126, 234, 0.2);
     overflow-x: auto;
     overflow-y: hidden;
     perspective: 1000px;
     scroll-behavior: smooth;
-    z-index: 1000;
+    z-index: 999 !important; /* 确保在header下方 */
     width: auto;
-    max-width: 90%;
+    max-width: calc(100% - 20px); /* 留出左右边距 */
 }
 
 #opponent-hand::-webkit-scrollbar {

@@ -11,13 +11,13 @@
     }
     
     #opponent-hand {
-        transform: scale(0.6);
-        top: 120px;
-        left: 10px;
-        max-width: 95%;
+        transform: scale(0.6) !important;
+        top: 180px !important; /* 放在对手状态栏下方，增加间距 */
+        left: 10px !important; /* 与对手状态栏左对齐 */
+        max-width: calc(100% - 20px);
         min-height: 160px;
         max-height: 180px;
-        padding: 10px 15px;
+        padding: 20px 15px 10px 15px !important; /* 增加上内边距 */
     }
     
     .center-panel {

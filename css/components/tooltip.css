@@ -1,0 +1,70 @@
+/**
+ * Tooltip组件样式
+ * 浮动提示窗口样式
+ */
+
+/* Tooltip容器 */
+.tooltip {
+    position: fixed;
+    background: rgba(0, 0, 0, 0.9);
+    backdrop-filter: blur(10px);
+    color: #ffffff;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.85em;
+    line-height: 1.4;
+    pointer-events: none;
+    z-index: 10000;
+    opacity: 0;
+    transform: translateY(-5px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    max-width: 250px;
+    word-wrap: break-word;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    white-space: pre-line;
+}
+
+/* Tooltip显示状态 */
+.tooltip.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* 不同位置的tooltip箭头 */
+.tooltip::before {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 0;
+    border: 6px solid transparent;
+}
+
+.tooltip-top::before {
+    bottom: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-top-color: rgba(0, 0, 0, 0.9);
+}
+
+.tooltip-bottom::before {
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-bottom-color: rgba(0, 0, 0, 0.9);
+}
+
+.tooltip-left::before {
+    right: -12px;
+    top: 50%;
+    transform: translateY(-50%);
+    border-left-color: rgba(0, 0, 0, 0.9);
+}
+
+.tooltip-right::before {
+    left: -12px;
+    top: 50%;
+    transform: translateY(-50%);
+    border-right-color: rgba(0, 0, 0, 0.9);
+}
+

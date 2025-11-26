@@ -23,7 +23,9 @@ class CardEffect {
 
         // 记录日志
         if (message && this.logSystem) {
-            this.logSystem.addLog(message);
+            // 根据出牌者确定消息来源
+            const source = cardUser === 'player' ? 'player' : 'opponent';
+            this.logSystem.addLog(message, source);
         }
     }
 
