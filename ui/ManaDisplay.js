@@ -17,10 +17,13 @@ class ManaDisplay {
         // 使用当前玩家的maxMana计算百分比
         const percentage = maxMana > 0 ? (mana / maxMana) * 100 : 0;
         
-        // 更新能量条宽度
-        this.manaFillEl.style.width = `${percentage}%`;
+        // 限制能量条宽度不超过100%
+        const displayPercentage = Math.min(100, percentage);
         
-        // 更新能量文本
+        // 更新能量条宽度
+        this.manaFillEl.style.width = `${displayPercentage}%`;
+        
+        // 更新能量文本（正常显示，不需要额外标注）
         this.manaTextEl.textContent = `${mana}/${maxMana}`;
         
         // 根据能量值调整颜色

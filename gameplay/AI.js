@@ -45,7 +45,13 @@ class AI {
 
             for (let i = 0; i < availableCards.length; i++) {
                 const card = availableCards[i];
+                // 检查是否有足够能量打出卡牌（基于基础消耗）
                 if (card.cost <= remainingMana) {
+                    // 计算净能量消耗（考虑能量恢复效果）
+                    const netCost = card.getNetManaCost ? card.getNetManaCost(remainingMana, opponent.maxMana) : card.cost;
+                    
+                    // 如果净消耗后能量为负，说明这张卡牌会恢复能量，可以继续打
+                    // 但前提是基础消耗要够
                     const priority = cardPriority[card.type] || 5;
                     const energyEfficiency = card.cost / remainingMana;
                     const score = (6 - priority) * 10 + energyEfficiency * 5;
@@ -67,7 +73,13 @@ class AI {
 
             if (selectedCard) {
                 playSequence.push(selectedCard);
-                remainingMana -= selectedCard.cost;
+                // 计算净能量消耗（考虑能量恢复效果）
+                // 注意：能量可以超过上限，所以不需要限制上限
+                const netCost = selectedCard.getNetManaCost ? selectedCard.getNetManaCost(remainingMana, opponent.maxMana) : selectedCard.cost;
+                // 扣除净能量消耗
+                remainingMana -= netCost;
+                // 确保剩余能量不为负（但允许超过上限）
+                remainingMana = Math.max(0, remainingMana);
                 availableCards.splice(selectedIndex, 1);
             } else {
                 break;

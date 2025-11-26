@@ -34,25 +34,78 @@ class Player {
 
     /**
      * 增加生命值
+     * @param {number} amount - 治疗值
+     * @param {EventSystem} eventSystem - 可选的事件系统，用于触发治疗事件
      */
-    addHealth(amount) {
+    addHealth(amount, eventSystem = null) {
+        const oldHealth = this.health;
         this.setHealth(this.health + amount);
+        
+        // 触发治疗事件（只有实际治疗时才触发）
+        if (eventSystem && this.health > oldHealth && amount > 0) {
+            eventSystem.emit('player:heal', {
+                player: this.name,
+                heal: this.health - oldHealth,
+                oldHealth: oldHealth,
+                newHealth: this.health
+            });
+        }
     }
 
     /**
-     * 减少生命值（考虑防御buff）
+     * 减少生命值（考虑护盾和防御buff）
+     * @param {number} amount - 伤害值
+     * @param {EventSystem} eventSystem - 可选的事件系统，用于触发扣血事件
      */
-    takeDamage(amount) {
+    takeDamage(amount, eventSystem = null) {
+        // 先计算护盾吸收
+        const shieldValue = this.getBuffValue('shield');
+        let remainingDamage = amount;
+        
+        if (shieldValue > 0) {
+            // 消耗护盾
+            const shieldBuffs = this.getBuffsByType('shield');
+            let damageToAbsorb = remainingDamage;
+            
+            for (const shieldBuff of shieldBuffs) {
+                if (damageToAbsorb <= 0) break;
+                
+                const absorbAmount = Math.min(shieldBuff.value, damageToAbsorb);
+                shieldBuff.value -= absorbAmount;
+                damageToAbsorb -= absorbAmount;
+                
+                // 如果护盾被消耗完，移除buff
+                if (shieldBuff.value <= 0) {
+                    this.removeBuff(shieldBuff.id);
+                }
+            }
+            
+            remainingDamage = damageToAbsorb;
+        }
+        
         // 计算防御buff效果
         const defenseBonus = this.getBuffValue('defense');
-        const actualDamage = Math.max(0, amount - defenseBonus);
+        const actualDamage = Math.max(0, remainingDamage - defenseBonus);
+        
+        // 记录扣血前的生命值
+        const oldHealth = this.health;
         
         // 扣除生命值
         if (actualDamage > 0) {
             this.setHealth(this.health - actualDamage);
+            
+            // 触发扣血事件（只有实际扣血时才触发）
+            if (eventSystem && this.health < oldHealth) {
+                eventSystem.emit('player:damage', {
+                    player: this.name,
+                    damage: actualDamage,
+                    oldHealth: oldHealth,
+                    newHealth: this.health
+                });
+            }
         }
         
-        return actualDamage; // 返回实际造成的伤害
+        return amount - remainingDamage + actualDamage; // 返回实际造成的总伤害（护盾吸收+生命损失）
     }
 
     /**
@@ -173,11 +226,18 @@ class Player {
     /**
      * 处理回合开始时的buff效果
      * @param {Function} logCallback - 可选的日志回调函数 (message, source) => void
+     * @param {GameState} gameState - 游戏状态（用于需要访问gameState的buff）
      */
-    processTurnStartBuffs(logCallback = null) {
+    processTurnStartBuffs(logCallback = null, gameState = null) {
         this.buffs.forEach(buff => {
             if (buff.onTurnStart) {
-                const result = buff.onTurnStart(this, logCallback);
+                let result = buff.onTurnStart(this, logCallback, gameState);
+                
+                // 如果返回的是函数，说明需要gameState参数
+                if (typeof result === 'function' && gameState) {
+                    result = result(gameState);
+                }
+                
                 // 如果buff的onTurnStart返回了日志消息，且提供了日志回调，则记录日志
                 if (result && typeof result === 'object' && result.message && logCallback) {
                     logCallback(result.message, result.source || 'system');

@@ -31,6 +31,9 @@
 </head>
 <body>
     <div class="game-container">
+        <!-- 屏幕伤害闪烁效果 -->
+        <div class="screen-damage-flash" id="screen-damage-flash"></div>
+        
         <!-- 左侧：对手状态 - 独立浮动区域 -->
         <div class="header-player-info opponent-header-info floating-status">
                 <div class="player-name">🤖 对手</div>
@@ -132,15 +135,20 @@
     </div>
 
     <!-- 核心模块 -->
+    <script src="core/EventSystem.js"></script>
     <script src="core/Player.js"></script>
     <script src="core/Card.js"></script>
     <script src="core/Buff.js"></script>
+    <script src="core/EffectComponent.js"></script>
+    <script src="core/EffectRegistry.js"></script>
     <script src="core/GameMessage.js"></script>
     <script src="core/GameMessageLog.js"></script>
     <script src="core/GameState.js"></script>
     
     <!-- 数据模块 -->
     <script src="data/CardData.js"></script>
+    <script src="data/EffectDefinitions.js"></script>
+    <script src="data/CardEffectDefinitions.js"></script>
     <script src="data/CardFactory.js"></script>
     
     <!-- 游戏逻辑模块 -->
@@ -163,6 +171,15 @@
     <!-- 动画模块 -->
     <script src="animation/AnimationSystem.js"></script>
     <script src="animation/CardAnimation.js"></script>
+    
+    <!-- 游戏管理器模块 -->
+    <script src="game/managers/HandAnimationManager.js"></script>
+    <script src="game/managers/ScreenEffectManager.js"></script>
+    <script src="game/managers/ComboBuffHandler.js"></script>
+    <script src="game/managers/CardPlayManager.js"></script>
+    <script src="game/managers/GameUIManager.js"></script>
+    <script src="game/managers/GameFlowController.js"></script>
+    <script src="game/managers/GameEventManager.js"></script>
     
     <!-- 主游戏类 -->
     <script src="game/Game.js"></script>

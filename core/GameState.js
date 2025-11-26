@@ -10,6 +10,7 @@ class GameState {
         this.gameStarted = false;
         this.currentTurnCards = []; // 当前回合打出的卡牌元素
         this.turnNumber = 0; // 当前回合数
+        this.eventSystem = new EventSystem(); // 事件系统
     }
 
     /**
@@ -48,7 +49,7 @@ class GameState {
         currentPlayer.restoreMana();
         
         // 处理当前玩家回合开始时的buff
-        currentPlayer.processTurnStartBuffs(logCallback);
+        currentPlayer.processTurnStartBuffs(logCallback, this);
     }
 
     /**

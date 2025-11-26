@@ -81,26 +81,30 @@
 .card-header {
     font-size: 0.9em;
     font-weight: bold;
-    margin-bottom: 5px;
+    margin-bottom: 4px;
     text-align: center;
     border-bottom: 1px solid rgba(255, 255, 255, 0.3);
-    padding-bottom: 4px;
+    padding-bottom: 3px;
     color: #ffffff;
 }
 
 .card-icon {
-    font-size: 1.8em;
+    font-size: 1.6em;
     text-align: center;
-    margin: 5px 0;
+    margin: 3px 0;
 }
 
 .card-description {
+    white-space: pre-line;
     font-size: 0.7em;
-    margin-bottom: 5px;
+    margin-bottom: 28px; /* 为底部效果区域留出空间 */
+    padding-bottom: 4px;
     opacity: 0.95;
     text-align: center;
     line-height: 1.2;
     color: #f0f0f0;
+    max-height: 50px; /* 限制最大高度，避免溢出 */
+    overflow: hidden;
 }
 
 .card-cost {
@@ -120,83 +124,56 @@
 }
 
 
-/* 卡牌数值显示 - 固定位置布局 */
-/* 右下角：伤害值 */
-.card-power {
+/* 卡牌数值效果区域 - 统一排列在底部 */
+.card-effects {
     position: absolute;
-    bottom: 5px;
-    right: 5px;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 4px;
+    padding: 4px;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.2) 50%, transparent 100%);
+    border-radius: 0 0 10px 10px;
+}
+
+/* 统一的数值效果样式 */
+.card-effect {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    padding: 2px 6px;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 0.7em;
+    color: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    min-width: 24px;
+    height: 20px;
+}
+
+/* 伤害值样式 */
+.card-effect.card-power {
     background: linear-gradient(135deg, #ef4444, #dc2626);
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    font-size: 0.85em;
-    color: #fff;
     box-shadow: 0 2px 6px rgba(239, 68, 68, 0.6);
-    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.3);
 }
 
-/* 左下角：治疗值（如果有治疗） */
-.card-heal {
-    position: absolute;
-    bottom: 5px;
-    left: 5px;
+/* 治疗值样式 */
+.card-effect.card-heal {
     background: linear-gradient(135deg, #22c55e, #16a34a);
-    padding: 3px 8px;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 3px;
-    font-weight: bold;
-    font-size: 0.75em;
-    color: #fff;
     box-shadow: 0 2px 6px rgba(34, 197, 94, 0.6);
-    border: 2px solid rgba(187, 247, 208, 0.5);
-    min-width: 32px;
+    border-color: rgba(187, 247, 208, 0.5);
 }
 
-/* 左下角：加牌图标（固定位置，如果有治疗则在治疗上方） */
-.card-draw {
-    position: absolute;
-    bottom: 5px;
-    left: 5px;
+/* 抽牌样式 */
+.card-effect.card-draw {
     background: linear-gradient(135deg, #a855f7, #9333ea);
-    padding: 3px 8px;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 3px;
-    font-weight: bold;
-    font-size: 0.75em;
-    color: #fff;
     box-shadow: 0 2px 6px rgba(168, 85, 247, 0.6);
-    border: 2px solid rgba(221, 214, 254, 0.5);
-    min-width: 32px;
-}
-
-/* 左下角上方：加牌图标（当同时有治疗或伤害时，显示在治疗上方） */
-.card-draw-top {
-    position: absolute;
-    bottom: 30px;
-    left: 5px;
-    background: linear-gradient(135deg, #a855f7, #9333ea);
-    padding: 3px 8px;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 3px;
-    font-weight: bold;
-    font-size: 0.75em;
-    color: #fff;
-    box-shadow: 0 2px 6px rgba(168, 85, 247, 0.6);
-    border: 2px solid rgba(221, 214, 254, 0.5);
-    min-width: 32px;
+    border-color: rgba(221, 214, 254, 0.5);
 }
 
