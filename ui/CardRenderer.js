@@ -136,6 +136,7 @@ class CardRenderer {
                     });
                 }
 
+
                 handEl.appendChild(cardEl);
             }
         });

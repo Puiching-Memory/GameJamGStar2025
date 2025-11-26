@@ -70,10 +70,10 @@
     transform: rotate(var(--card-rotation, 0deg));
 }
 
-/* 玩家打出的卡牌 - 蓝色系 */
+/* 玩家打出的卡牌 - 蓝绿色系，与手牌配色一致 */
 .played-card-in-zone.player-card {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border: 2px solid rgba(102, 126, 234, 0.8);
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    border: 2px solid rgba(79, 172, 254, 0.8);
 }
 
 /* 对手打出的卡牌 - 红色系 */

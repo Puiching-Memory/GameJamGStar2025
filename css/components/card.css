@@ -20,6 +20,11 @@
     font-size: 0.75em;
 }
 
+/* 玩家手牌使用不同的配色 - 蓝绿色系，与紫色背景形成对比 */
+#player-hand .card:not(.opponent-card) {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
 .card:active {
     cursor: grabbing;
 }
