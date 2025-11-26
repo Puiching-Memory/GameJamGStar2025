@@ -43,31 +43,31 @@
     --message-color: #667eea;
 }
 
-/* 玩家消息 - 蓝色系 */
+/* 玩家消息 - GitHub 绿色系 */
 .danmaku-item.danmaku-player {
-    background: linear-gradient(135deg, rgba(79, 172, 254, 0.95) 0%, rgba(0, 242, 254, 0.95) 100%);
-    border-color: rgba(79, 172, 254, 0.6);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6), 0 0 20px rgba(79, 172, 254, 0.4);
+    background: linear-gradient(135deg, rgba(35, 134, 54, 0.96) 0%, rgba(63, 185, 80, 0.98) 100%);
+    border-color: rgba(46, 160, 67, 0.9);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.7), 0 0 20px rgba(63, 185, 80, 0.6);
 }
 
-/* 对手消息 - 红色系 */
+/* 对手消息 - 暗红系，对比玩家绿色 */
 .danmaku-item.danmaku-opponent {
-    background: linear-gradient(135deg, rgba(245, 87, 108, 0.95) 0%, rgba(240, 147, 251, 0.95) 100%);
-    border-color: rgba(245, 87, 108, 0.6);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6), 0 0 20px rgba(245, 87, 108, 0.4);
+    background: linear-gradient(135deg, rgba(190, 49, 68, 0.96) 0%, rgba(240, 80, 80, 0.98) 100%);
+    border-color: rgba(248, 81, 73, 0.9);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.7), 0 0 20px rgba(248, 81, 73, 0.6);
 }
 
-/* 系统消息 - 紫色系（默认） */
+/* 系统消息 - 冷色系蓝紫，贴合深色主题 */
 .danmaku-item.danmaku-system {
-    background: linear-gradient(135deg, rgba(102, 126, 234, 0.95) 0%, rgba(118, 75, 162, 0.95) 100%);
-    border-color: rgba(102, 126, 234, 0.6);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6), 0 0 20px rgba(102, 126, 234, 0.4);
+    background: linear-gradient(135deg, rgba(56, 139, 253, 0.96) 0%, rgba(88, 166, 255, 0.98) 100%);
+    border-color: rgba(88, 166, 255, 0.9);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.7), 0 0 20px rgba(88, 166, 255, 0.6);
 }
 
-/* 游戏消息 - 金色系 */
+/* 游戏消息 - 金色 + 轻微绿色，突出“重要提示” */
 .danmaku-item.danmaku-game {
-    background: linear-gradient(135deg, rgba(251, 191, 36, 0.95) 0%, rgba(245, 158, 11, 0.95) 100%);
-    border-color: rgba(251, 191, 36, 0.6);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6), 0 0 20px rgba(251, 191, 36, 0.4);
+    background: linear-gradient(135deg, rgba(251, 191, 36, 0.96) 0%, rgba(245, 158, 11, 0.96) 60%, rgba(63, 185, 80, 0.98) 100%);
+    border-color: rgba(251, 191, 36, 0.9);
+    box-shadow: 0 4px 22px rgba(0, 0, 0, 0.75), 0 0 24px rgba(251, 191, 36, 0.7);
 }
 

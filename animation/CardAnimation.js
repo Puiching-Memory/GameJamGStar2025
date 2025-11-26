@@ -38,6 +38,16 @@ class CardAnimation {
         playedCardEl.classList.add('last-played-card');
         currentTurnCards.push(playedCardEl);
 
+        // 为新创建的场上卡牌添加一次入场动画
+        playedCardEl.classList.add('played-card-enter');
+        playedCardEl.addEventListener(
+            'animationend',
+            () => {
+                playedCardEl.classList.remove('played-card-enter');
+            },
+            { once: true }
+        );
+
         if (this.dropZoneHint) {
             this.dropZoneHint.style.display = 'none';
         }
@@ -59,9 +69,26 @@ class CardAnimation {
         const maxX = Math.max(0, containerRect.width - cardWidth);
         const maxY = Math.max(0, containerRect.height - cardHeight);
 
+        // 使用高斯分布，让位置更自然地聚集在中间
+        // Box-Muller 生成 N(0,1)，再映射到 [0,1]，并做裁剪
+        const gaussian01 = (mean = 0.5, std = 0.18) => {
+            let u1 = 0;
+            let u2 = 0;
+            // 避免 log(0)
+            while (u1 === 0) u1 = Math.random();
+            while (u2 === 0) u2 = Math.random();
+            const z0 = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2); // N(0,1)
+            const v = mean + z0 * std;
+            // 裁剪到 [0,1]，避免跑出容器
+            return Math.min(1, Math.max(0, v));
+        };
+
+        const biasedX = gaussian01() * maxX;
+        const biasedY = gaussian01() * maxY;
+
         return {
-            x: Math.random() * maxX,
-            y: Math.random() * maxY,
+            x: biasedX,
+            y: biasedY,
             rotation: (Math.random() - 0.5) * 30 // -15度到15度
         };
     }

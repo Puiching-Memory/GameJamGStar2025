@@ -17,23 +17,25 @@
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
+    /* 主按钮：GitHub 绿色渐变 */
+    background: linear-gradient(135deg, #238636 0%, #2ea043 100%);
+    color: #ffffff;
 }
 
 .btn-primary:hover:not(:disabled) {
     transform: scale(1.05);
-    box-shadow: 0 5px 20px rgba(102, 126, 234, 0.5);
+    box-shadow: 0 5px 20px rgba(46, 160, 67, 0.6);
 }
 
 .btn-secondary {
-    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-    color: white;
+    /* 次要按钮：GitHub 深灰色 */
+    background: linear-gradient(135deg, #21262d 0%, #30363d 100%);
+    color: #c9d1d9;
 }
 
 .btn-secondary:hover:not(:disabled) {
     transform: scale(1.05);
-    box-shadow: 0 5px 20px rgba(245, 87, 108, 0.5);
+    box-shadow: 0 5px 20px rgba(48, 54, 61, 0.7);
 }
 
 .btn:disabled {

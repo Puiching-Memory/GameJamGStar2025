@@ -30,6 +30,14 @@ class Game {
         // UI元素引用
         this.elements = {};
 
+        // 本回合新获得的手牌（用于入场动画）
+        this.newPlayerHandCardIds = new Set();
+        this.newOpponentHandCardIds = new Set();
+
+        // 记录上一次手牌数量，用于判断是否需要播放重排动画
+        this.prevPlayerHandSize = 0;
+        this.prevOpponentHandSize = 0;
+
         // 初始化
         this.initializeElements();
         this.initializeComponents();
@@ -278,6 +286,11 @@ class Game {
         this.gameState.player.hand = this.cardFactory.getRandomCards(5);
         this.gameState.opponent.hand = this.cardFactory.getRandomCards(5);
 
+        // 标记初始手牌为“新获得”，用于首回合入场动画
+        this.newPlayerHandCardIds = new Set(
+            this.gameState.player.hand.map(card => card.id)
+        );
+
         // 清空已打出的卡牌
         if (this.elements.playedCardsContainer) {
             this.elements.playedCardsContainer.innerHTML = '';
@@ -332,8 +345,19 @@ class Game {
     updateDisplay() {
         this.displayManager.update(this.gameState);
 
+        // 记录更新前的手牌数量
+        const currentPlayerHandSize = this.gameState.player.hand.length;
+        const currentOpponentHandSize = this.gameState.opponent.hand.length;
+
+        // 记录对手手牌浮动窗口的旧宽度，用于做平滑尺寸过渡
+        let opponentOldWidth = 0;
+        if (this.elements.opponentHandEl) {
+            opponentOldWidth = this.elements.opponentHandEl.offsetWidth;
+        }
+
         // 更新手牌
         this.displayManager.updateHand('player', this.gameState.player.hand, this.cardRenderer, {
+            enterAnimationCardIds: this.newPlayerHandCardIds,
             isCardDisabled: (card) => this.isCardDisabled(card),
             onCardClick: (card) => this.playCard(card),
             onCardDoubleClick: (card) => this.showCardDetails(card),
@@ -353,9 +377,89 @@ class Game {
         });
 
         this.displayManager.updateHand('opponent', this.gameState.opponent.hand, this.cardRenderer, {
-            draggable: false
+            draggable: false,
+            enterAnimationCardIds: this.newOpponentHandCardIds
+        });
+
+        // 手牌渲染完成后，清空“新获得”标记，避免重复播放动画
+        this.newPlayerHandCardIds.clear();
+        this.newOpponentHandCardIds.clear();
+
+        // 如果手牌数量发生变化，为对应手牌区域添加一次轻微的重排动画
+        if (currentPlayerHandSize !== this.prevPlayerHandSize && this.elements.playerHandEl) {
+            this.triggerHandReflowAnimation(this.elements.playerHandEl);
+        }
+        if (currentOpponentHandSize !== this.prevOpponentHandSize && this.elements.opponentHandEl) {
+            this.triggerHandReflowAnimation(this.elements.opponentHandEl);
+            this.animateOpponentHandResize(this.elements.opponentHandEl, opponentOldWidth);
+        }
+
+        // 更新缓存的手牌数量
+        this.prevPlayerHandSize = currentPlayerHandSize;
+        this.prevOpponentHandSize = currentOpponentHandSize;
+    }
+
+    /**
+     * 触发手牌重排动画：通过类名和一次性计时器控制
+     */
+    triggerHandReflowAnimation(handEl) {
+        // 先移除再强制回流，确保多次调用也能重新触发动画
+        handEl.classList.remove('hand-reflow');
+        // 读一次 offsetWidth 触发布局
+        // eslint-disable-next-line no-unused-expressions
+        handEl.offsetWidth;
+        handEl.classList.add('hand-reflow');
+
+        setTimeout(() => {
+            handEl.classList.remove('hand-reflow');
+        }, 260);
+    }
+
+    /**
+     * 为对手手牌浮动窗口的大小变化添加平滑过渡动画（宽度过渡）
+     * @param {HTMLElement} handEl
+     * @param {number} oldWidth
+     */
+    animateOpponentHandResize(handEl, oldWidth) {
+        if (!handEl) return;
+
+        // 根据卡牌数量粗略估算一个视觉上“合理”的宽度，而不是直接用 scrollWidth
+        const cardEls = handEl.querySelectorAll('.card');
+        const cardCount = cardEls.length;
+
+        // 基于样式：每张牌宽度约120px，左右重叠约40px，容器左右 padding 约40px
+        const baseCardWidth = 120;
+        const cardStep = 80; // 120 - 40 重叠
+        const containerPaddingX = 40;
+        const minWidth = 180; // 至少保留一个小面板的宽度
+
+        let targetWidth;
+        if (cardCount <= 0) {
+            targetWidth = minWidth;
+        } else {
+            targetWidth = containerPaddingX + baseCardWidth + cardStep * (cardCount - 1);
+            if (targetWidth < minWidth) {
+                targetWidth = minWidth;
+            }
+        }
+
+        if (!oldWidth || !targetWidth || Math.abs(targetWidth - oldWidth) < 1) {
+            // 如果没有旧宽度或变化很小，就直接同步为目标宽度
+            if (targetWidth) {
+                handEl.style.width = `${targetWidth}px`;
+            }
+            return;
+        }
+
+        // 先把当前宽度锁定在旧值
+        handEl.style.width = `${oldWidth}px`;
+
+        // 下一帧再切换到目标宽度，由 CSS 的 transition: width 控制过渡
+        requestAnimationFrame(() => {
+            handEl.style.width = `${targetWidth}px`;
         });
     }
+
 
     /**
      * 检查卡牌是否禁用
@@ -380,7 +484,10 @@ class Game {
         // 消耗能量
         this.gameState.player.consumeMana(card.cost);
 
-        // 从手牌移除
+        // 先触发手牌退出动画（如果有对应DOM），等动画结束后再重新排列手牌
+        const exitPromise = this.playHandCardExitAnimation('player', card.id);
+
+        // 从手牌移除（游戏状态）
         this.gameState.player.removeCard(card.id);
 
         // 执行卡牌效果
@@ -390,7 +497,10 @@ class Game {
         // 处理抽牌效果
         if (card.draw > 0) {
             for (let i = 0; i < card.draw; i++) {
-                this.gameState.player.drawCard(this.cardFactory.getRandomCard());
+                const newCard = this.cardFactory.getRandomCard();
+                if (this.gameState.player.drawCard(newCard)) {
+                    this.newPlayerHandCardIds.add(newCard.id);
+                }
             }
         }
 
@@ -402,11 +512,12 @@ class Game {
             this.gameState.currentTurnCards
         );
 
-        this.updateDisplay();
-        this.checkGameOver();
-
-        // 检查能量是否耗尽，如果耗尽且没有可用卡牌，自动结束回合
-        this.checkAutoEndTurn();
+        // 等退出动画结束后，再更新显示和自动结束回合逻辑
+        exitPromise.then(() => {
+            this.updateDisplay();
+            this.checkGameOver();
+            this.checkAutoEndTurn();
+        });
     }
 
     /**
@@ -472,7 +583,12 @@ class Game {
         this.processPlayedCardsFade();
 
         // 对手回合开始时抽一张牌（与玩家一致）
-        this.gameState.opponent.drawCard(this.cardFactory.getRandomCard());
+        {
+            const newCard = this.cardFactory.getRandomCard();
+            if (this.gameState.opponent.drawCard(newCard)) {
+                this.newOpponentHandCardIds.add(newCard.id);
+            }
+        }
         
         // 立即更新显示，确保抽牌效果可见（同步更新）
         this.updateDisplay();
@@ -511,6 +627,9 @@ class Game {
         const cardIndex = this.gameState.opponent.hand.findIndex(c => c.id === card.id);
 
         if (cardIndex !== -1) {
+            // 在状态更新前，为对手手牌添加退出动画，并在动画结束后再更新对手手牌排列
+            const exitPromise = this.playHandCardExitAnimation('opponent', card.id);
+
             // 消耗能量
             this.gameState.opponent.consumeMana(card.cost);
 
@@ -524,7 +643,10 @@ class Game {
             // 处理抽牌效果
             if (card.draw > 0) {
                 for (let i = 0; i < card.draw; i++) {
-                    this.gameState.opponent.drawCard(this.cardFactory.getRandomCard());
+                    const newCard = this.cardFactory.getRandomCard();
+                    if (this.gameState.opponent.drawCard(newCard)) {
+                        this.newOpponentHandCardIds.add(newCard.id);
+                    }
                 }
             }
 
@@ -536,12 +658,13 @@ class Game {
                 this.gameState.currentTurnCards
             );
 
-            this.updateDisplay();
-
-            // 延迟后出下一张牌
-            setTimeout(() => {
-                this.playOpponentCardSequence(cards, index + 1);
-            }, 800);
+            // 等退出动画结束后再更新界面，并按原有节奏继续出下一张牌
+            exitPromise.then(() => {
+                this.updateDisplay();
+                setTimeout(() => {
+                    this.playOpponentCardSequence(cards, index + 1);
+                }, 800);
+            });
         }
     }
 
@@ -558,7 +681,12 @@ class Game {
         // 玩家回合开始时增加回合数
         this.gameState.turnNumber++;
         this.updateTurnNumber();
-        this.gameState.player.drawCard(this.cardFactory.getRandomCard());
+        {
+            const newCard = this.cardFactory.getRandomCard();
+            if (this.gameState.player.drawCard(newCard)) {
+                this.newPlayerHandCardIds.add(newCard.id);
+            }
+        }
         this.elements.endTurnBtn.disabled = false;
         this.logSystem.addLog('你的回合！', 'player');
 
@@ -651,6 +779,93 @@ class Game {
             this.logSystem.addLog('你获胜了！恭喜！', 'game');
             this.gameOver('player');
         }
+    }
+
+    /**
+     * 为手牌播放退出动画，并在动画结束后移除对应 DOM
+     * @param {'player' | 'opponent'} owner
+     * @param {string} cardId
+     * @returns {Promise<void>}
+     */
+    playHandCardExitAnimation(owner, cardId) {
+        return new Promise((resolve) => {
+            try {
+                const handEl = owner === 'player'
+                    ? this.elements.playerHandEl
+                    : this.elements.opponentHandEl;
+
+                if (!handEl || !this.animationSystem) {
+                    resolve();
+                    return;
+                }
+
+                const selector = `.card[data-card-id="${cardId}"]`;
+                const handCardEl = handEl.querySelector(selector);
+                if (!handCardEl) {
+                    resolve();
+                    return;
+                }
+
+                // 根据来源手牌区域打上标记类，用于保持与原手牌一致的配色/背面样式
+                if (owner === 'player') {
+                    handCardEl.classList.add('card-from-player-hand');
+                } else {
+                    handCardEl.classList.add('card-from-opponent-hand');
+                }
+
+                // 在原位置插入一个不可见占位元素，保持手牌布局不立即收缩
+                const placeholder = document.createElement('div');
+                placeholder.className = `${handCardEl.className} card-placeholder`;
+                placeholder.style.visibility = 'hidden';
+                placeholder.style.pointerEvents = 'none';
+                handEl.insertBefore(placeholder, handCardEl);
+
+                // 保护元素，避免在渲染时被立即移除
+                this.animationSystem.protectElement(handCardEl);
+
+                // 记录当前屏幕位置，并将元素从手牌布局中抽离出来，锁定在当前视觉位置
+                const rect = handCardEl.getBoundingClientRect();
+                const left = rect.left;
+                const top = rect.top;
+
+                if (handCardEl.parentNode !== document.body) {
+                    document.body.appendChild(handCardEl);
+                }
+
+                handCardEl.style.position = 'fixed';
+                handCardEl.style.left = `${left}px`;
+                handCardEl.style.top = `${top}px`;
+                // 不再额外添加 translate(-50%, -50%)，避免与动画中的 transform 冲突
+                handCardEl.style.width = `${rect.width}px`;
+                handCardEl.style.height = `${rect.height}px`;
+                handCardEl.style.zIndex = '10000';
+
+                handCardEl.classList.add('card-exit');
+                handCardEl.style.pointerEvents = 'none';
+
+                handCardEl.addEventListener(
+                    'animationend',
+                    () => {
+                        handCardEl.classList.remove('card-exit');
+                        if (this.animationSystem) {
+                            this.animationSystem.unprotectElement(handCardEl);
+                        }
+                        if (handCardEl.parentNode) {
+                            handCardEl.remove();
+                        }
+                        // 移除占位符，再通知上层可以更新手牌布局
+                        if (placeholder && placeholder.parentNode) {
+                            placeholder.remove();
+                        }
+                        resolve();
+                    },
+                    { once: true }
+                );
+            } catch (e) {
+                console.warn('hand card exit animation failed:', e);
+                resolve();
+            }
+        });
     }
 
     /**

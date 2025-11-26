@@ -47,10 +47,12 @@ class CardRenderer {
         cardEl.innerHTML = this.buildCardHTML(card);
 
         // 设置交互选项
-        if (options.isDisabled) {
-            cardEl.classList.add('disabled');
+        // 说明：
+        // - 是否能被“选择/出牌”由外层逻辑控制（isDisabled 只在事件回调里判断）
+        // - 这里不再通过 .disabled 样式打断 hover / active 动画，保证视觉一致性
+        if (options.draggable === false) {
             cardEl.draggable = false;
-        } else if (options.draggable !== false) {
+        } else {
             cardEl.draggable = true;
         }
 
@@ -107,6 +109,23 @@ class CardRenderer {
             if (!existingCardIds.has(card.id)) {
                 const isDisabled = options.isCardDisabled ? options.isCardDisabled(card) : false;
                 const cardEl = this.createCardElement(card, player, { isDisabled });
+
+                // 视觉上标记为“不可出牌”（变灰），但不影响 hover / active 等动画
+                if (isDisabled && player === 'player') {
+                    cardEl.classList.add('card-unplayable');
+                }
+
+                // 对标记为“新获得”的手牌播放入场动画（玩家和对手都可用）
+                if (options.enterAnimationCardIds && options.enterAnimationCardIds.has(card.id)) {
+                    cardEl.classList.add('card-enter');
+                    cardEl.addEventListener(
+                        'animationend',
+                        () => {
+                            cardEl.classList.remove('card-enter');
+                        },
+                        { once: true }
+                    );
+                }
                 
                 // 添加交互事件
                 if (options.onCardClick) {

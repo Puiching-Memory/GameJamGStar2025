@@ -282,7 +282,8 @@ class CardFactory {
                     name: 'CL自动机器人',
                     icon: '🤖',
                     type: 'special',
-                    value: 0,
+                    // 显示为“基础自动攻击伤害 5”，避免界面上看到 0
+                    value: 5,
                     duration: 5,
                     description: '每回合自动攻击5点',
                     stackable: false,

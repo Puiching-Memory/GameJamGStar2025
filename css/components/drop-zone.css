@@ -8,8 +8,9 @@
     width: 100%;
     flex: 1;
     padding: 40px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 3px dashed rgba(255, 255, 255, 0.3);
+    /* 拖拽区域：GitHub Dark 深色边框 */
+    background: rgba(22, 27, 34, 0.9);
+    border: 3px dashed rgba(48, 54, 61, 0.9);
     border-radius: 15px;
     display: flex;
     flex-direction: column;
@@ -22,7 +23,7 @@
 }
 
 .drop-zone-hint {
-    color: rgba(255, 255, 255, 0.5);
+    color: rgba(201, 209, 217, 0.7);
     font-size: 1.2em;
     text-align: center;
     pointer-events: none;
@@ -31,14 +32,14 @@
 }
 
 .drop-zone.drag-over {
-    background: rgba(255, 255, 255, 0.15);
-    border-color: #ffd700;
+    background: rgba(35, 134, 54, 0.16);
+    border-color: #2ea043;
     border-style: solid;
     box-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
 }
 
 .drop-zone.drag-over .drop-zone-hint {
-    color: #ffd700;
+    color: #3fb950;
     transform: scale(1.1);
 }
 
@@ -70,20 +71,21 @@
     transform: rotate(var(--card-rotation, 0deg));
 }
 
-/* 玩家打出的卡牌 - 蓝绿色系，与手牌配色一致 */
+/* 玩家打出的卡牌 - GitHub 绿色系，与玩家手牌配色一致 */
 .played-card-in-zone.player-card {
-    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-    border: 2px solid rgba(79, 172, 254, 0.8);
+    background: linear-gradient(135deg, #238636 0%, #2ea043 40%, #3fb950 100%);
+    border: 2px solid rgba(63, 185, 80, 0.9);
 }
 
-/* 对手打出的卡牌 - 红色系 */
+/* 对手打出的卡牌 - 深色对比色，略带红调 */
 .played-card-in-zone.opponent-card {
-    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-    border: 2px solid rgba(245, 87, 108, 0.8);
+    background: linear-gradient(135deg, #3c1f2b 0%, #8b2f4a 100%);
+    border: 2px solid rgba(248, 81, 73, 0.9);
 }
 
 /* 本回合打出的卡牌 - 视觉高亮 */
 .played-card-in-zone.current-turn-card {
+    /* 恢复为原来的金色高亮效果 */
     border: 3px solid rgba(255, 215, 0, 0.8);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 
                 0 0 15px rgba(255, 215, 0, 0.5),
@@ -93,6 +95,7 @@
 
 /* 最后一张打出的卡牌 - 最明显的视觉高亮 */
 .played-card-in-zone.last-played-card {
+    /* 恢复为原来的金色高亮效果 */
     border: 4px solid rgba(255, 215, 0, 1);
     box-shadow: 0 6px 30px rgba(0, 0, 0, 0.5), 
                 0 0 25px rgba(255, 215, 0, 0.8),
@@ -120,6 +123,7 @@
 .played-card .card-header {
     font-size: 0.9em;
     margin-bottom: 5px;
+    color: #ffffff;
 }
 
 .played-card .card-icon {
@@ -129,12 +133,26 @@
 
 .played-card .card-description {
     font-size: 0.7em;
+    color: #f0f0f0;
+}
+
+/* 已打出的卡牌区域内的文字颜色 */
+.played-card-in-zone .card-header {
+    color: #ffffff;
+}
+
+.played-card-in-zone .card-description {
+    color: #f0f0f0;
+}
+
+.played-card-in-zone .card-cost {
+    color: #ffffff;
 }
 
 /* 已打出的卡牌区域（旧版，保留兼容性） */
 .played-cards-area {
     padding: 10px;
-    background: rgba(0, 0, 0, 0.2);
+    background: rgba(13, 17, 23, 0.9);
     border-radius: 10px;
     flex-shrink: 0;
     max-height: 150px;
@@ -147,12 +165,12 @@
 }
 
 .played-cards-area::-webkit-scrollbar-track {
-    background: rgba(0, 0, 0, 0.2);
+    background: rgba(22, 27, 34, 0.9);
     border-radius: 10px;
 }
 
 .played-cards-area::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.3);
+    background: rgba(88, 166, 255, 0.6);
     border-radius: 10px;
 }
 
@@ -173,7 +191,7 @@
 .played-card {
     width: 70px;
     height: 100px;
-    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    background: linear-gradient(135deg, #238636 0%, #2ea043 40%, #3fb950 100%);
     border-radius: 8px;
     padding: 6px;
     font-size: 0.65em;

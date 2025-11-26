@@ -54,4 +54,73 @@
     animation: damage 0.3s ease;
 }
 
+/* 手牌入场动画：从下方轻微弹入并淡入 */
+@keyframes cardEnter {
+    0% {
+        transform: translateY(40px) scale(0.85);
+        opacity: 0;
+    }
+    60% {
+        transform: translateY(-6px) scale(1.03);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+}
+
+.card-enter {
+    animation: cardEnter 0.35s ease-out;
+}
+
+/* 中央拖拽区内打出的卡牌入场动画：
+ * 模仿“甩牌”动作：先略大、略靠近玩家，再轻微回弹缩小到正常大小
+ */
+@keyframes playedCardEnter {
+    0% {
+        /* 从玩家手里甩出：更大一些，从下方靠近中心 */
+        transform: translateY(60px) scale(1.35) rotate(var(--card-rotation, 0deg));
+        opacity: 0;
+    }
+    45% {
+        /* 击中桌面的瞬间：最大、最亮 */
+        transform: translateY(0) scale(1.1) rotate(var(--card-rotation, 0deg));
+        opacity: 1;
+    }
+    70% {
+        /* 轻微回弹 */
+        transform: translateY(-6px) scale(0.97) rotate(var(--card-rotation, 0deg));
+        opacity: 1;
+    }
+    100% {
+        /* 最终稳定到正常大小和位置 */
+        transform: translateY(0) scale(1) rotate(var(--card-rotation, 0deg));
+        opacity: 1;
+    }
+}
+
+.played-card-enter {
+    animation: playedCardEnter 0.42s cubic-bezier(0.2, 0.8, 0.2, 1.05);
+}
+
+/* 手牌退出动画：向上淡出，效果与入场相反 */
+@keyframes cardExit {
+    0% {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+    40% {
+        transform: translateY(6px) scale(1.03);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(-40px) scale(0.85);
+        opacity: 0;
+    }
+}
+
+.card-exit {
+    animation: cardExit 0.35s ease-in forwards;
+}
 

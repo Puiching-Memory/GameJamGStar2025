@@ -20,11 +20,13 @@ html, body {
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    /* GitHub Dark 风格背景：深黑偏蓝 */
+    background: #0d1117;
     height: 100vh;
     width: 100vw;
     padding: 0;
-    color: #fff;
+    /* GitHub Dark 文本颜色 */
+    color: #c9d1d9;
     display: flex;
     flex-direction: column;
     overflow-x: hidden;
