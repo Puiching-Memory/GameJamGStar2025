@@ -1,0 +1,77 @@
+/**
+ * 状态条组件
+ * 包含血量条、能量条等状态组件
+ */
+
+/* 血条包装器 */
+.health-bar-wrapper {
+    position: relative;
+    width: 180px;
+    height: 22px;
+    flex-shrink: 0;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* 血量条 */
+.health-bar {
+    position: relative;
+    width: 180px;
+    height: 22px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 11px;
+    overflow: hidden;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    z-index: 1;
+    box-sizing: border-box;
+}
+
+.health-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4ade80, #22c55e);
+    transition: width 0.5s ease;
+    border-radius: 15px;
+}
+
+.health-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-weight: bold;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+    z-index: 1;
+}
+
+/* 能量条 */
+.mana-bar {
+    position: relative;
+    width: 180px;
+    height: 22px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 11px;
+    overflow: hidden;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    flex-shrink: 0;
+    margin-top: 6px;
+}
+
+.mana-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #fbbf24, #f59e0b);
+    transition: width 0.5s ease;
+    border-radius: 11px;
+}
+
+.mana-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-weight: bold;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+    z-index: 1;
+    font-size: 0.9em;
+}
+

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Git竞技场 - Git操作卡牌对战</title>
+    <!-- 基础样式 -->
+    <link rel="stylesheet" href="css/base/reset.css">
+    
+    <!-- 布局样式 -->
+    <link rel="stylesheet" href="css/layout/container.css">
+    <link rel="stylesheet" href="css/layout/header.css">
+    <link rel="stylesheet" href="css/layout/main.css">
+    
+    <!-- 组件样式 -->
+    <link rel="stylesheet" href="css/components/status-bar.css">
+    <link rel="stylesheet" href="css/components/card.css">
+    <link rel="stylesheet" href="css/components/hand.css">
+    <link rel="stylesheet" href="css/components/drop-zone.css">
+    <link rel="stylesheet" href="css/components/button.css">
+    <link rel="stylesheet" href="css/components/modal.css">
+    <link rel="stylesheet" href="css/components/log.css">
+    
+    <!-- 动画样式 -->
+    <link rel="stylesheet" href="css/animations/keyframes.css">
+    
+    <!-- 响应式样式 -->
+    <link rel="stylesheet" href="css/responsive/media-queries.css">
+</head>
+<body>
+    <div class="game-container">
+        <header class="game-header">
+            <!-- 左侧：对手状态 -->
+            <div class="header-player-info opponent-header-info">
+                <div class="player-name">🤖 对手</div>
+                <div class="stats-container">
+                    <div class="health-bar-wrapper">
+                        <div class="health-bar">
+                            <div class="health-fill" id="opponent-health" style="width: 100%"></div>
+                            <span class="health-text" id="opponent-health-text">100/100</span>
+                        </div>
+                    </div>
+                    <!-- 能量显示 -->
+                    <div class="mana-bar">
+                        <div class="mana-fill" id="opponent-mana" style="width: 100%"></div>
+                        <span class="mana-text" id="opponent-mana-text">3/3</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 中间：标题 -->
+            <div class="header-title">
+                <h1>⚔️ Git竞技场</h1>
+                <div class="turn-number" id="turn-number">第 0 回合</div>
+            </div>
+
+            <!-- 右侧：玩家状态 -->
+            <div class="header-player-info player-header-info">
+                <div class="player-name">👤 你</div>
+                <div class="stats-container">
+                    <div class="health-bar-wrapper">
+                        <div class="health-bar">
+                            <div class="health-fill" id="player-health" style="width: 100%"></div>
+                            <span class="health-text" id="player-health-text">100/100</span>
+                        </div>
+                    </div>
+                    <!-- 能量显示 -->
+                    <div class="mana-bar">
+                        <div class="mana-fill" id="player-mana" style="width: 100%"></div>
+                        <span class="mana-text" id="player-mana-text">3/3</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- 对手手牌区域 - 浮动窗口 -->
+        <div class="hand-area" id="opponent-hand"></div>
+
+        <div class="main-layout">
+            <!-- 左侧：空区域（保持对称） -->
+            <div class="left-panel">
+            </div>
+
+            <!-- 中央：拖拽区域（独占中间，左右顶满） -->
+            <div class="center-panel">
+                <div class="drop-zone" id="drop-zone">
+                    <div class="drop-zone-hint" id="drop-zone-hint">⬇️ 拖拽卡牌到这里使用 ⬇️</div>
+                    <div class="played-cards-container" id="played-cards-container"></div>
+                </div>
+                <!-- 游戏控制按钮 -->
+                <div class="center-controls">
+                    <button class="btn btn-primary" id="start-game-btn">开始游戏</button>
+                    <button class="btn btn-secondary" id="end-turn-btn" disabled>结束回合</button>
+                </div>
+            </div>
+
+            <!-- 右侧：空区域（保持对称） -->
+            <div class="right-panel">
+                <!-- 可以放一些额外的信息或保持空白 -->
+            </div>
+        </div>
+
+        <!-- 底部：玩家手牌 -->
+        <div class="player-hand-container">
+            <div class="hand-area" id="player-hand"></div>
+        </div>
+
+        <!-- 浮动游戏信息栏（弹幕区域） -->
+        <div class="danmaku-container" id="danmaku-container"></div>
+
+        <!-- 卡牌详情弹窗 -->
+        <div class="modal" id="card-modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <div id="card-details"></div>
+            </div>
+        </div>
+
+        <!-- 游戏结束对话框 -->
+        <div class="modal game-over-modal" id="game-over-modal">
+            <div class="game-over-content">
+                <div class="game-over-icon" id="game-over-icon"></div>
+                <h2 class="game-over-title" id="game-over-title"></h2>
+                <p class="game-over-message" id="game-over-message"></p>
+                <button class="btn btn-primary" id="game-over-close-btn">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 核心模块 -->
+    <script src="core/Player.js"></script>
+    <script src="core/Card.js"></script>
+    <script src="core/GameState.js"></script>
+    
+    <!-- 数据模块 -->
+    <script src="data/CardData.js"></script>
+    <script src="data/CardFactory.js"></script>
+    
+    <!-- 游戏逻辑模块 -->
+    <script src="gameplay/CardEffect.js"></script>
+    <script src="gameplay/TurnManager.js"></script>
+    <script src="gameplay/AI.js"></script>
+    
+    <!-- UI模块 -->
+    <script src="ui/LogSystem.js"></script>
+    <script src="ui/HealthBar.js"></script>
+    <script src="ui/ManaDisplay.js"></script>
+    <script src="ui/CardRenderer.js"></script>
+    <script src="ui/DisplayManager.js"></script>
+    
+    <!-- 交互模块 -->
+    <script src="interaction/DragDrop.js"></script>
+    
+    <!-- 动画模块 -->
+    <script src="animation/AnimationSystem.js"></script>
+    <script src="animation/CardAnimation.js"></script>
+    
+    <!-- 主游戏类 -->
+    <script src="game/Game.js"></script>
+    
+    <!-- 初始化 -->
+    <script>
+        let game;
+        document.addEventListener('DOMContentLoaded', () => {
+            game = new Game();
+        });
+    </script>
+</body>
+</html>
+
+

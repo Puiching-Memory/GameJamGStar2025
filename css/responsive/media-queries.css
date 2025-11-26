@@ -1,0 +1,67 @@
+/**
+ * 响应式设计
+ * 定义不同屏幕尺寸下的样式适配
+ */
+
+/* 响应式设计 */
+@media (max-width: 1200px) {
+    .main-layout {
+        flex-direction: column;
+        height: calc(100vh - 60px - 180px);
+    }
+    
+    #opponent-hand {
+        transform: scale(0.6);
+        top: 120px;
+        left: 10px;
+        max-width: 95%;
+        min-height: 160px;
+        max-height: 180px;
+        padding: 10px 15px;
+    }
+    
+    .center-panel {
+        flex: 1;
+        min-height: 200px;
+    }
+    
+    .center-controls {
+        margin-top: 5px;
+        padding: 8px;
+    }
+    
+    .center-controls .btn {
+        padding: 8px 15px;
+        font-size: 0.85em;
+        min-width: 100px;
+    }
+    
+    .drop-zone-hint {
+        font-size: 0.9em;
+    }
+    
+    .card {
+        width: 80px;
+        height: 110px;
+        font-size: 0.65em;
+    }
+    
+    #player-hand .card {
+        width: 100px;
+        height: 140px;
+        margin-left: -30px;
+    }
+    
+    .health-bar-wrapper {
+        width: 150px;
+    }
+    
+    .health-bar {
+        width: 150px;
+    }
+    
+    .mana-bar {
+        width: 150px;
+    }
+}
+

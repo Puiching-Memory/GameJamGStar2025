@@ -1,0 +1,142 @@
+/**
+ * 模态框组件
+ * 定义卡牌详情弹窗的样式
+ */
+
+/* 模态框 */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(5px);
+}
+
+.modal-content {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    margin: 10% auto;
+    padding: 30px;
+    border-radius: 20px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    position: relative;
+    animation: fadeIn 0.3s ease;
+}
+
+.close {
+    position: absolute;
+    right: 20px;
+    top: 15px;
+    font-size: 2em;
+    font-weight: bold;
+    color: #fff;
+    cursor: pointer;
+    transition: opacity 0.3s ease;
+    opacity: 0.8;
+    line-height: 1;
+}
+
+.close:hover {
+    opacity: 0.7;
+}
+
+/* 游戏结束对话框 - 更明显的样式 */
+.game-over-modal {
+    z-index: 10000;
+    background-color: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(10px);
+    animation: fadeIn 0.4s ease;
+}
+
+.game-over-content {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    margin: 15% auto;
+    padding: 50px 40px;
+    border-radius: 25px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8),
+                0 0 100px rgba(102, 126, 234, 0.3);
+    position: relative;
+    text-align: center;
+    border: 3px solid rgba(255, 255, 255, 0.2);
+    animation: gameOverPopUp 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.game-over-modal.victory .game-over-content {
+    border-color: rgba(34, 197, 94, 0.6);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8),
+                0 0 100px rgba(34, 197, 94, 0.4);
+}
+
+.game-over-modal.defeat .game-over-content {
+    border-color: rgba(239, 68, 68, 0.6);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8),
+                0 0 100px rgba(239, 68, 68, 0.4);
+}
+
+.game-over-icon {
+    font-size: 5em;
+    margin-bottom: 20px;
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+.game-over-title {
+    font-size: 2.5em;
+    font-weight: bold;
+    margin: 0 0 20px 0;
+    color: #fff;
+    text-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+}
+
+.game-over-modal.victory .game-over-title {
+    color: #4ade80;
+    text-shadow: 0 0 20px rgba(34, 197, 94, 0.6);
+}
+
+.game-over-modal.defeat .game-over-title {
+    color: #ef4444;
+    text-shadow: 0 0 20px rgba(239, 68, 68, 0.6);
+}
+
+.game-over-message {
+    font-size: 1.3em;
+    color: rgba(255, 255, 255, 0.9);
+    margin: 0 0 30px 0;
+    line-height: 1.6;
+}
+
+#game-over-close-btn {
+    font-size: 1.2em;
+    padding: 12px 40px;
+    margin-top: 10px;
+}
+
+@keyframes gameOverPopUp {
+    0% {
+        transform: scale(0.3) translateY(50px);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.1) translateY(-10px);
+    }
+    100% {
+        transform: scale(1) translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+}
+

@@ -1,0 +1,207 @@
+/**
+ * 手牌组件
+ * 定义玩家和对手手牌的样式
+ */
+
+.hand-area {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+/* 玩家手牌区域 */
+#player-hand {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 0;
+    flex-wrap: nowrap;
+    height: 100%;
+    padding: 10px 20px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    position: relative;
+    perspective: 1000px;
+    scroll-behavior: smooth;
+}
+
+#player-hand::-webkit-scrollbar {
+    height: 8px;
+}
+
+#player-hand::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+}
+
+#player-hand::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+}
+
+#player-hand::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
+}
+
+/* 玩家手牌的特殊样式 - 横向排列，有重叠效果 */
+#player-hand .card {
+    margin-left: -40px;
+    transform-origin: center bottom;
+    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    position: relative;
+    transform-style: preserve-3d;
+    width: 120px;
+    height: 160px;
+}
+
+#player-hand .card:first-child {
+    margin-left: 0;
+}
+
+/* 为每张卡牌添加轻微的旋转，模拟真实手牌 */
+#player-hand .card:nth-child(odd) {
+    transform: rotate(-2deg);
+}
+
+#player-hand .card:nth-child(even) {
+    transform: rotate(2deg);
+}
+
+/* 悬停时卡牌提升并放大，并恢复正位 */
+#player-hand .card:hover {
+    transform: translateY(-50px) scale(1.25) rotate(0deg) !important;
+    z-index: 100;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+    border-color: #ffd700;
+    margin-left: -25px;
+    margin-right: 25px;
+}
+
+/* 悬停时相邻卡牌稍微移动，避免重叠 */
+#player-hand .card:hover ~ .card {
+    transform: translateX(25px);
+}
+
+/* 当卡牌被选中时 */
+#player-hand .card.selected {
+    transform: translateY(-30px) scale(1.15);
+    border-color: #ffd700;
+    box-shadow: 0 0 25px rgba(255, 215, 0, 0.8);
+    z-index: 50;
+}
+
+/* 对手手牌 - 自适应浮动窗口 */
+#opponent-hand {
+    position: fixed;
+    top: 130px;
+    left: 20px;
+    transform: scale(0.7);
+    transform-origin: top left;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 0;
+    flex-wrap: nowrap;
+    min-height: 180px;
+    max-height: 200px;
+    padding: 15px 20px;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 20px rgba(102, 126, 234, 0.2);
+    overflow-x: auto;
+    overflow-y: hidden;
+    perspective: 1000px;
+    scroll-behavior: smooth;
+    z-index: 1000;
+    width: auto;
+    max-width: 90%;
+}
+
+#opponent-hand::-webkit-scrollbar {
+    height: 6px;
+}
+
+#opponent-hand::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+}
+
+#opponent-hand::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+}
+
+/* 对手手牌背面 - 隐藏卡牌内容，添加堆叠效果 */
+#opponent-hand .card {
+    background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%) !important;
+    cursor: default;
+    position: relative;
+    margin-left: -40px;
+    transform-origin: center bottom;
+    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    transform-style: preserve-3d;
+    width: 120px;
+    height: 160px;
+}
+
+#opponent-hand .card:first-child {
+    margin-left: 0;
+}
+
+/* 为每张卡牌添加轻微的旋转，模拟真实手牌 */
+#opponent-hand .card:nth-child(odd) {
+    transform: rotate(-2deg);
+}
+
+#opponent-hand .card:nth-child(even) {
+    transform: rotate(2deg);
+}
+
+#opponent-hand .card::before {
+    content: '🃏';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 2.5em;
+    opacity: 0.8;
+    z-index: 10;
+    pointer-events: none;
+}
+
+#opponent-hand .card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+    border-radius: 15px;
+    z-index: 5;
+    pointer-events: none;
+}
+
+#opponent-hand .card .card-cost,
+#opponent-hand .card .card-header,
+#opponent-hand .card .card-icon,
+#opponent-hand .card .card-description,
+#opponent-hand .card .card-power,
+#opponent-hand .card .card-heal,
+#opponent-hand .card .card-draw,
+#opponent-hand .card .card-draw-top {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    display: none !important;
+}
+

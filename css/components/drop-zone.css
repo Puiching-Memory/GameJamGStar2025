@@ -1,0 +1,186 @@
+/**
+ * 拖拽区域组件
+ * 定义拖拽区域和已打出卡牌的样式
+ */
+
+/* 拖拽区域 */
+.drop-zone {
+    width: 100%;
+    flex: 1;
+    padding: 40px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 3px dashed rgba(255, 255, 255, 0.3);
+    border-radius: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    position: relative;
+    min-height: 300px;
+    overflow: visible;
+}
+
+.drop-zone-hint {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 1.2em;
+    text-align: center;
+    pointer-events: none;
+    position: absolute;
+    z-index: 1;
+}
+
+.drop-zone.drag-over {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: #ffd700;
+    border-style: solid;
+    box-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+}
+
+.drop-zone.drag-over .drop-zone-hint {
+    color: #ffd700;
+    transform: scale(1.1);
+}
+
+/* 打出的卡牌容器 - 随机堆叠 */
+.played-cards-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    padding: 20px;
+    z-index: 2;
+    min-height: 300px;
+    overflow: visible;
+}
+
+/* 拖拽区域中的打出卡牌 - 随机位置堆叠 */
+.played-card-in-zone {
+    width: 110px;
+    height: 150px;
+    border-radius: 12px;
+    padding: 10px;
+    font-size: 0.75em;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    position: absolute;
+    overflow: hidden;
+    transition: all 0.5s ease;
+    cursor: default;
+    transform-style: preserve-3d;
+    z-index: 1;
+    transform: rotate(var(--card-rotation, 0deg));
+}
+
+/* 玩家打出的卡牌 - 蓝色系 */
+.played-card-in-zone.player-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: 2px solid rgba(102, 126, 234, 0.8);
+}
+
+/* 对手打出的卡牌 - 红色系 */
+.played-card-in-zone.opponent-card {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    border: 2px solid rgba(245, 87, 108, 0.8);
+}
+
+/* 本回合打出的卡牌 - 视觉高亮 */
+.played-card-in-zone.current-turn-card {
+    border: 3px solid rgba(255, 215, 0, 0.8);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 
+                0 0 15px rgba(255, 215, 0, 0.5),
+                0 0 30px rgba(255, 215, 0, 0.3);
+    z-index: 10;
+}
+
+/* 最后一张打出的卡牌 - 最明显的视觉高亮 */
+.played-card-in-zone.last-played-card {
+    border: 4px solid rgba(255, 215, 0, 1);
+    box-shadow: 0 6px 30px rgba(0, 0, 0, 0.5), 
+                0 0 25px rgba(255, 215, 0, 0.8),
+                0 0 50px rgba(255, 215, 0, 0.5),
+                0 0 75px rgba(255, 215, 0, 0.3);
+    z-index: 20;
+}
+
+/* 卡牌悬停效果 - 保留原有旋转角度 */
+.played-card-in-zone:hover {
+    transform: scale(1.15) translateY(-10px) rotate(var(--card-rotation, 0deg)) !important;
+    z-index: 100 !important;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
+}
+
+/* 最后一张卡牌悬停时保持高亮和旋转 */
+.played-card-in-zone.last-played-card:hover {
+    transform: scale(1.15) translateY(-10px) rotate(var(--card-rotation, 0deg)) !important;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7), 
+                0 0 40px rgba(255, 215, 0, 1),
+                0 0 80px rgba(255, 215, 0, 0.8),
+                0 0 120px rgba(255, 215, 0, 0.5) !important;
+}
+
+.played-card .card-header {
+    font-size: 0.9em;
+    margin-bottom: 5px;
+}
+
+.played-card .card-icon {
+    font-size: 1.5em;
+    margin: 5px 0;
+}
+
+.played-card .card-description {
+    font-size: 0.7em;
+}
+
+/* 已打出的卡牌区域（旧版，保留兼容性） */
+.played-cards-area {
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+    flex-shrink: 0;
+    max-height: 150px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.played-cards-area::-webkit-scrollbar {
+    width: 6px;
+}
+
+.played-cards-area::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+}
+
+.played-cards-area::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+}
+
+.played-cards-label {
+    font-size: 0.9em;
+    opacity: 0.8;
+    margin-bottom: 10px;
+    font-weight: bold;
+}
+
+.played-cards-list {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: flex-start;
+}
+
+.played-card {
+    width: 70px;
+    height: 100px;
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    border-radius: 8px;
+    padding: 6px;
+    font-size: 0.65em;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+}
+

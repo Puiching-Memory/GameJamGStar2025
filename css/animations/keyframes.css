@@ -1,0 +1,57 @@
+/**
+ * 动画定义
+ * 包含所有keyframes动画
+ */
+
+/* 消息弹出动画 */
+@keyframes messagePopUp {
+    0% {
+        transform: translateY(50px) scale(0.8);
+        opacity: 0;
+    }
+    15% {
+        transform: translateY(0) scale(1.05);
+        opacity: 1;
+    }
+    20% {
+        transform: translateY(0) scale(1);
+    }
+    70% {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(-30px) scale(0.95);
+        opacity: 0;
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 0.9;
+        transform: translateY(0);
+    }
+}
+
+/* 伤害动画 */
+@keyframes damage {
+    0%, 100% {
+        transform: translateX(0);
+    }
+    25% {
+        transform: translateX(-10px);
+    }
+    75% {
+        transform: translateX(10px);
+    }
+}
+
+.damage-animation {
+    animation: damage 0.3s ease;
+}
+
+
