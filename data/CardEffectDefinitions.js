@@ -85,8 +85,7 @@ const CARD_EFFECT_DEFINITIONS = {
         type: 'composite',
         config: {
             effects: [
-                { type: 'removeCard', config: { count: 1 }, priority: 2 },
-                { type: 'manaDrain', config: { amount: 1 }, priority: 1 },
+                { type: 'removeCard', config: { count: 1 }, priority: 1 },
                 { type: 'shield', config: { amount: 5, duration: 2 }, priority: 0 }
             ]
         }
@@ -189,7 +188,7 @@ const CARD_EFFECT_DEFINITIONS = {
                 { 
                     type: 'maxHealth', 
                     config: { amount: 15 },
-                    priority: 3
+                    priority: 1
                 },
                 { 
                     type: 'regenBuff', 
@@ -199,22 +198,6 @@ const CARD_EFFECT_DEFINITIONS = {
                         name: '自然恢复', 
                         icon: '💚' 
                     },
-                    priority: 2
-                },
-                { 
-                    type: 'shield', 
-                    config: { amount: 8, duration: 3 },
-                    priority: 1
-                },
-                { 
-                    type: 'manaRegenBuff', 
-                    config: {
-                        name: '能量恢复',
-                        icon: '⚡',
-                        amount: 1,
-                        duration: 3,
-                        stackable: false
-                    },
                     priority: 0
                 }
             ]
@@ -223,60 +206,28 @@ const CARD_EFFECT_DEFINITIONS = {
 
     // ========== 自动化工具 ==========
     'github-action': {
-        type: 'composite',
+        type: 'autoPlayGitOperation',
         config: {
-            effects: [
-                { 
-                    type: 'manaBuff', 
-                    config: {
-                        name: 'GitHub Action',
-                        icon: '🔄',
-                        value: 2,
-                        duration: 6,
-                        stackable: false
-                    },
-                    priority: 1
-                },
-                { 
-                    type: 'manaRegenBuff', 
-                    config: {
-                        name: '自动恢复',
-                        icon: '⚡',
-                        amount: 1,
-                        duration: 6,
-                        stackable: false
-                    },
-                    priority: 0
-                }
+            buffName: 'GitHub Action',
+            buffIcon: '🔄',
+            duration: 8, // 持续时间更长
+            operations: [
+                // 专注于持续集成/部署相关操作
+                'push', 'pull', 'fetch', 'merge', 'status',
+                'commit', 'branch', 'checkout'
             ]
         }
     },
     'cl-bot': {
-        type: 'composite',
+        type: 'autoPlayGitOperation',
         config: {
-            effects: [
-                { 
-                    type: 'autoAttackBuff', 
-                    config: {
-                        name: 'CL自动机器人',
-                        icon: '🤖',
-                        damage: 6,
-                        duration: 6,
-                        stackable: false
-                    },
-                    priority: 1
-                },
-                { 
-                    type: 'comboBuff', 
-                    config: {
-                        name: '连击',
-                        icon: '⚡',
-                        damage: 3,
-                        duration: 4,
-                        stackable: false
-                    },
-                    priority: 0
-                }
+            buffName: 'CL自动机器人',
+            buffIcon: '🤖',
+            duration: 5, // 持续时间较短
+            operations: [
+                // 专注于代码审查/清理相关操作
+                'add', 'commit', 'diff', 'blame', 'clean',
+                'log', 'show', 'status', 'cherry-pick', 'rebase'
             ]
         }
     }

@@ -17,18 +17,35 @@ class CardPlayManager {
      */
     isCardDisabled(card) {
         if (!card || !card.cost) return true;
-        if (this.gameState.turn !== 'player') return true;
+        const currentPlayer = this.gameState.getCurrentPlayer();
+        if (!currentPlayer || currentPlayer.name !== 'player') return true;
         if (!this.gameState.gameStarted) return true;
-        return this.gameState.player.mana < card.cost;
+        if (this.gameState.player.mana < card.cost) return true;
+        
+        // 检查自动机器人卡牌：如果已存在相同类型的自动机器人，则禁用
+        // 使用 baseId 或从 id 中提取基础ID
+        const baseId = card.baseId || (card.id ? card.id.split('_')[0] : '');
+        if (baseId === 'github-action' || baseId === 'cl-bot') {
+            const botType = baseId;
+            if (this.gameState.hasAutoBotOfType(botType, this.gameState.player)) {
+                return true; // 已存在相同类型的自动机器人，禁用该卡牌
+            }
+        }
+        
+        return false;
     }
 
     /**
      * 打出卡牌
      */
     playCard(card, onComplete) {
-        if (this.gameState.turn !== 'player' || !this.gameState.gameStarted) return;
+        const currentPlayer = this.gameState.getCurrentPlayer();
+        if (!currentPlayer || currentPlayer.name !== 'player' || !this.gameState.gameStarted) return;
         if (this.gameState.player.mana < card.cost) {
-            this.logSystem.addLog('能量不足！', 'system');
+            this.logSystem.addLog({
+                userMessage: '能量不足！',
+                devMessage: `[CardPlay] 能量不足 | Card: ${card.name} | Cost: ${card.cost} | Current Mana: ${this.gameState.player.mana}/${this.gameState.player.maxMana}`
+            }, 'system');
             return;
         }
 
@@ -46,6 +63,9 @@ class CardPlayManager {
             const target = this.cardEffect.determineTarget(card, 'player');
             this.cardEffect.execute(card, target, 'player');
 
+            // 记录卡牌打出历史
+            this.gameState.recordCardPlay(card, 'player', this.gameState.turnNumber);
+
             // 播放出牌动画
             this.cardAnimation.animateCardPlay(
                 card,
@@ -56,18 +76,29 @@ class CardPlayManager {
 
             // 等退出动画结束后，再更新显示和自动结束回合逻辑
             exitPromise.then(() => {
+                // 触发背景 GitGraph 更新事件
+                if (this.gameState.eventSystem) {
+                    this.gameState.eventSystem.emit('gitgraph:update');
+                }
                 if (onComplete) {
                     onComplete();
                 }
             }).catch((error) => {
                 console.error('出牌动画处理错误:', error);
+                // 触发背景 GitGraph 更新事件
+                if (this.gameState.eventSystem) {
+                    this.gameState.eventSystem.emit('gitgraph:update');
+                }
                 if (onComplete) {
                     onComplete();
                 }
             });
         } catch (error) {
             console.error(`打出卡牌 ${card.name} 时发生错误:`, error);
-            this.logSystem.addLog(`打出卡牌 ${card.name} 失败！`, 'system');
+            this.logSystem.addLog({
+                userMessage: `打出卡牌 ${card.name} 失败！`,
+                devMessage: `[Error] 打出卡牌失败 | Card: ${card.name} | Error: ${error.message || error.toString()} | Stack: ${error.stack || 'N/A'}`
+            }, 'system');
             if (onComplete) {
                 onComplete();
             }
@@ -100,6 +131,9 @@ class CardPlayManager {
                 const target = this.cardEffect.determineTarget(card, 'opponent');
                 this.cardEffect.execute(card, target, 'opponent');
 
+                // 记录卡牌打出历史
+                this.gameState.recordCardPlay(card, 'opponent', this.gameState.turnNumber);
+
                 // 播放出牌动画
                 this.cardAnimation.animateCardPlay(
                     card,
@@ -110,6 +144,10 @@ class CardPlayManager {
 
                 // 等退出动画结束后再更新界面，并按原有节奏继续出下一张牌
                 exitPromise.then(() => {
+                    // 触发背景 GitGraph 更新事件
+                    if (this.gameState.eventSystem) {
+                        this.gameState.eventSystem.emit('gitgraph:update');
+                    }
                     if (onCardComplete) {
                         onCardComplete();
                     }
@@ -118,6 +156,10 @@ class CardPlayManager {
                     }, 800);
                 }).catch((error) => {
                     console.error('对手出牌动画处理错误:', error);
+                    // 触发背景 GitGraph 更新事件
+                    if (this.gameState.eventSystem) {
+                        this.gameState.eventSystem.emit('gitgraph:update');
+                    }
                     if (onCardComplete) {
                         onCardComplete();
                     }

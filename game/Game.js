@@ -16,6 +16,9 @@ class Game {
         // 创建卡牌工厂（使用新的效果注册表）
         this.cardFactory = new CardFactory(this.effectRegistry);
 
+        // 将cardFactory添加到gameState，以便buff回调可以访问
+        this.gameState.cardFactory = this.cardFactory;
+
         // 游戏逻辑模块
         this.cardEffect = new CardEffect(this.gameState, null, this.cardFactory); // logSystem稍后设置
         this.turnManager = new TurnManager(this.gameState, this.cardFactory);
@@ -73,8 +76,27 @@ class Game {
             turnNumberEl: document.getElementById('turn-number'),
             playerBuffsEl: document.getElementById('player-buffs'),
             opponentBuffsEl: document.getElementById('opponent-buffs'),
-            screenDamageFlash: document.getElementById('screen-damage-flash')
+            screenDamageFlash: document.getElementById('screen-damage-flash'),
+            multiPlayerStatusContainer: document.getElementById('multi-player-status-container'),
+            showGitGraphBtn: document.getElementById('show-gitgraph-btn'),
+            gitGraphModal: document.getElementById('gitgraph-modal'),
+            gitGraphModalCloseBtn: document.getElementById('gitgraph-modal-close-btn'),
+            gitGraphContainer: document.getElementById('gitgraph-container'),
+            showConsoleBtn: document.getElementById('show-console-btn'),
+            consoleModal: document.getElementById('console-modal'),
+            consoleModalCloseBtn: document.getElementById('console-modal-close-btn'),
+            consoleContainer: document.getElementById('console-container'),
+            consoleClearBtn: document.getElementById('console-clear-btn'),
+            consoleAutoScrollBtn: document.getElementById('console-auto-scroll-btn'),
+            gitGraphBackground: document.getElementById('gitgraph-background')
         };
+        
+        // 检查关键元素是否存在
+        if (!this.elements.startBtn) {
+            console.error('Game.initializeElements: start-game-btn 元素未找到');
+        } else {
+            console.log('Game.initializeElements: 所有元素已初始化，startBtn:', this.elements.startBtn);
+        }
     }
 
     /**
@@ -124,11 +146,16 @@ class Game {
             this.elements.playedCardsContainer,
             this.elements.dropZoneHint
         );
+        
+        // 将cardAnimation和cardRenderer添加到gameState，以便buff回调可以访问
+        this.gameState.cardAnimation = this.cardAnimation;
+        this.gameState.cardRenderer = this.cardRenderer;
 
         // 拖拽处理
         this.dragDrop = new DragDrop(this.elements.dropZone, {
             onDrop: (e) => {
-                if (this.draggedCard && this.gameState.turn === 'player' && this.gameState.gameStarted) {
+                const currentPlayer = this.gameState.getCurrentPlayer();
+                if (this.draggedCard && currentPlayer && currentPlayer.name === 'player' && this.gameState.gameStarted) {
                     this.playCard(this.draggedCard);
                     this.draggedCard = null;
                 }
@@ -174,6 +201,23 @@ class Game {
         );
         this.uiManager.initializeTooltips();
 
+        // GitGraph 生成器
+        this.gitGraphGenerator = new GitGraphGenerator(this.gameState);
+
+        // Console 管理器
+        this.consoleManager = new ConsoleManager(this.elements, this.logSystem);
+        // 设置日志系统的回调，将日志输出到 Console
+        this.logSystem.consoleCallback = (message, source, options) => {
+            this.consoleManager.addLog(message, source, options);
+        };
+
+        // GitGraph 管理器
+        this.gitGraphManager = new GitGraphManager(
+            this.elements,
+            this.gitGraphGenerator,
+            this.logSystem
+        );
+
         // 游戏流程控制器
         this.flowController = new GameFlowController(
             this.gameState,
@@ -215,14 +259,76 @@ class Game {
                 );
             }
         });
+
+        // 监听 GitGraph 更新事件
+        this.gameState.eventSystem.on('gitgraph:update', () => {
+            this.gitGraphManager.updateBackground();
+        });
+
+        // 监听玩家添加事件，立即更新显示
+        this.gameState.eventSystem.on('player:added', (data) => {
+            if (this.displayManager && this.displayManager.multiPlayerDisplay) {
+                // 找到新添加的玩家
+                const player = this.gameState.players.find(p => p.name === data.playerId || p.name === data.name);
+                if (player) {
+                    this.displayManager.multiPlayerDisplay.addPlayer(player, this.gameState);
+                    // 更新所有显示
+                    this.displayManager.update(this.gameState);
+                }
+            }
+            // 更新卡牌显示（自动机器人添加后，相关卡牌会被禁用）
+            this.updateDisplay();
+        });
+
+        // 监听玩家伤害事件，检查自动机器人是否死亡和游戏是否结束
+        this.gameState.eventSystem.on('player:damage', (data) => {
+            // 检查是否有自动机器人死亡
+            const deadAutoBots = this.gameState.players.filter(p => 
+                p.isAutoBot && p.health <= 0
+            );
+            if (deadAutoBots.length > 0) {
+                // 自动机器人死亡，更新卡牌显示（重新启用相关卡牌）
+                this.updateDisplay();
+            }
+            
+            // 如果玩家死亡，立即检查游戏是否结束
+            if (data.isDead) {
+                // 延迟检查，确保所有伤害事件处理完成
+                setTimeout(() => {
+                    this.flowController.checkGameOver();
+                }, 100);
+            }
+        });
+
+        // 监听玩家移除事件，更新显示
+        this.gameState.eventSystem.on('player:removed', (data) => {
+            if (this.displayManager && this.displayManager.multiPlayerDisplay) {
+                // 移除玩家状态栏
+                this.displayManager.multiPlayerDisplay.removePlayer(data.playerId);
+            }
+            // 更新卡牌显示（重新启用相关卡牌）
+            this.updateDisplay();
+        });
     }
+
 
     /**
      * 设置事件监听器
      */
     setupEventListeners() {
-        this.elements.startBtn.addEventListener('click', () => this.startGame());
+        if (!this.elements.startBtn) {
+            console.error('Game.setupEventListeners: startBtn 元素未找到');
+            return;
+        }
+        console.log('Game.setupEventListeners: 绑定开始游戏按钮事件');
+        this.elements.startBtn.addEventListener('click', () => {
+            console.log('开始游戏按钮被点击');
+            this.startGame();
+        });
+        
+        if (this.elements.endTurnBtn) {
         this.elements.endTurnBtn.addEventListener('click', () => this.endTurn());
+        }
 
         // 关闭卡牌详情模态框
         const closeBtn = document.querySelector('.close');
@@ -246,6 +352,55 @@ class Game {
                 }
             });
         }
+
+
+        if (this.elements.showConsoleBtn) {
+            this.elements.showConsoleBtn.addEventListener('click', () => {
+                this.consoleManager.show();
+            });
+        }
+
+        if (this.elements.consoleModalCloseBtn) {
+            this.elements.consoleModalCloseBtn.addEventListener('click', () => {
+                if (this.elements.consoleModal) {
+                    this.elements.consoleModal.style.display = 'none';
+                }
+            });
+        }
+
+        if (this.elements.consoleClearBtn) {
+            this.elements.consoleClearBtn.addEventListener('click', () => {
+                this.consoleManager.clear();
+            });
+        }
+
+        if (this.elements.consoleAutoScrollBtn) {
+            this.elements.consoleAutoScrollBtn.addEventListener('click', () => {
+                this.consoleManager.toggleAutoScroll();
+            });
+        }
+
+        // GitGraph 显示按钮
+        if (this.elements.showGitGraphBtn) {
+            this.elements.showGitGraphBtn.addEventListener('click', () => {
+                this.gitGraphManager.show();
+            });
+        }
+
+        // 关闭 GitGraph 模态框
+        if (this.elements.gitGraphModalCloseBtn) {
+            this.elements.gitGraphModalCloseBtn.addEventListener('click', () => {
+                if (this.elements.gitGraphModal) {
+                    this.elements.gitGraphModal.style.display = 'none';
+                }
+            });
+        }
+
+        window.addEventListener('click', (e) => {
+            if (e.target === this.elements.gitGraphModal) {
+                this.elements.gitGraphModal.style.display = 'none';
+            }
+        });
     }
 
     // ========== 游戏流程方法（委托给 flowController） ==========
@@ -254,7 +409,26 @@ class Game {
      * 开始游戏
      */
     startGame() {
+        try {
+            console.log('Game.startGame: 开始游戏');
+            if (!this.flowController) {
+                console.error('Game.startGame: flowController 未初始化');
+                return;
+            }
         this.flowController.startGame();
+        // 初始化背景 GitGraph
+            if (this.gitGraphManager) {
+        this.gitGraphManager.updateBackground();
+            }
+        } catch (error) {
+            console.error('Game.startGame: 发生错误', error);
+            if (this.logSystem) {
+                this.logSystem.addLog({
+                    userMessage: '游戏启动失败！',
+                    devMessage: `错误: ${error.message}`
+                }, 'system');
+            }
+        }
     }
 
     /**
@@ -279,6 +453,7 @@ class Game {
     playCard(card) {
         this.cardPlayManager.playCard(card, () => {
             this.updateDisplay();
+            this.gitGraphManager.updateBackground();
             this.flowController.checkGameOver();
             this.flowController.checkAutoEndTurn();
         });
@@ -303,7 +478,8 @@ class Game {
                 this.draggedCard = null;
             },
             canDrag: (card) => {
-                return this.gameState.turn === 'player' && 
+                const currentPlayer = this.gameState.getCurrentPlayer();
+                return currentPlayer && currentPlayer.name === 'player' && 
                        this.gameState.gameStarted && 
                        !this.isCardDisabled(card);
             }
@@ -323,4 +499,5 @@ class Game {
     showCardDetails(card) {
         this.uiManager.showCardDetails(card);
     }
+
 }

@@ -1,18 +1,28 @@
 /**
  * 显示管理器
  * 负责统一管理所有UI组件的更新
+ * 支持多人对战和自动机器人显示
  */
 class DisplayManager {
     constructor(elements, components) {
         this.elements = elements;
         this.components = components;
+        
+        // 多人显示管理器
+        this.multiPlayerDisplay = null;
+        if (elements.multiPlayerStatusContainer) {
+            this.multiPlayerDisplay = new MultiPlayerDisplay(
+                elements.multiPlayerStatusContainer,
+                components
+            );
+        }
     }
 
     /**
      * 更新所有显示
      */
     update(gameState) {
-        // 更新生命值
+        // 更新原有玩家和对手的显示
         if (this.components.playerHealthBar) {
             this.components.playerHealthBar.update(gameState.player.health, gameState.player.maxHealth);
         }
@@ -20,7 +30,6 @@ class DisplayManager {
             this.components.opponentHealthBar.update(gameState.opponent.health, gameState.opponent.maxHealth);
         }
 
-        // 更新能量显示
         if (this.components.playerManaDisplay) {
             this.components.playerManaDisplay.update(gameState.player.mana, gameState.player.maxMana);
         }
@@ -28,7 +37,6 @@ class DisplayManager {
             this.components.opponentManaDisplay.update(gameState.opponent.mana, gameState.opponent.maxMana);
         }
 
-        // 更新buff显示
         if (this.components.buffRenderer) {
             if (this.elements.playerBuffsEl) {
                 this.components.buffRenderer.update(this.elements.playerBuffsEl, gameState.player.buffs);
@@ -38,7 +46,21 @@ class DisplayManager {
             }
         }
 
-        // 更新手牌（由外部控制，因为需要交互逻辑）
+        // 多人模式：更新所有玩家状态栏
+        if (this.multiPlayerDisplay) {
+            // 如果有自动机器人或额外玩家，更新显示
+            const hasAutoBots = gameState.players.some(p => p.isAutoBot);
+            const hasExtraPlayers = gameState.players.some(p => 
+                p.name !== 'player' && p.name !== 'opponent' && !p.isAutoBot
+            );
+            
+            if (hasAutoBots || hasExtraPlayers) {
+                this.multiPlayerDisplay.update(gameState);
+            } else {
+                // 清除多人状态栏（回到双人模式）
+                this.multiPlayerDisplay.clear();
+            }
+        }
     }
 
     /**

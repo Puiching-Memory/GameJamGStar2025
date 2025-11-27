@@ -15,8 +15,24 @@ class GameFlowController {
      * 开始游戏
      */
     startGame() {
+        try {
+            console.log('GameFlowController.startGame: 开始游戏');
+            if (!this.gameState) {
+                console.error('GameFlowController.startGame: gameState 未初始化');
+                return;
+            }
+            if (!this.cardFactory) {
+                console.error('GameFlowController.startGame: cardFactory 未初始化');
+                return;
+            }
+            if (!this.components) {
+                console.error('GameFlowController.startGame: components 未初始化');
+                return;
+            }
+            
         this.gameState.reset();
         this.gameState.gameStarted = true;
+            console.log('GameFlowController.startGame: 游戏状态已重置');
 
         // 关闭游戏结束对话框（如果打开）
         if (this.components.elements.gameOverModal) {
@@ -56,38 +72,166 @@ class GameFlowController {
         this.components.uiManager.updateDisplay(
             this.components.getCardPlayOptions ? this.components.getCardPlayOptions() : undefined
         );
-        this.components.logSystem.addLog('游戏开始！', 'game');
-        this.components.logSystem.addLog('你的回合！', 'player');
+        this.components.logSystem.addLog({
+            userMessage: '游戏开始！',
+            devMessage: `[GameFlow] 游戏开始 | Turn: ${this.gameState.turnNumber} | Player Health: ${this.gameState.player.health}/${this.gameState.player.maxHealth} | Opponent Health: ${this.gameState.opponent.health}/${this.gameState.opponent.maxHealth}`
+        }, 'game');
+        this.components.logSystem.addLog({
+            userMessage: '你的回合！',
+            devMessage: `[Turn] 玩家回合开始 | Turn: ${this.gameState.turnNumber} | Mana: ${this.gameState.player.mana}/${this.gameState.player.maxMana} | Hand: ${this.gameState.player.hand.length} cards`
+        }, 'system');
+        } catch (error) {
+            console.error('GameFlowController.startGame: 发生错误', error);
+            if (this.components.logSystem) {
+                this.components.logSystem.addLog({
+                    userMessage: '游戏启动失败！',
+                    devMessage: `错误: ${error.message}\n堆栈: ${error.stack}`
+                }, 'system');
+            }
+        }
     }
 
     /**
      * 结束回合
      */
     endTurn() {
-        if (this.gameState.turn !== 'player' || !this.gameState.gameStarted) return;
+        const currentPlayer = this.gameState.getCurrentPlayer();
+        if (!currentPlayer || currentPlayer.name !== 'player' || !this.gameState.gameStarted) return;
 
         // 传递日志回调函数，用于记录buff效果
-        this.turnManager.endTurn((message, source) => {
+        const shouldContinue = this.turnManager.endTurn((messageOrData, source) => {
             if (this.components.logSystem) {
-                this.components.logSystem.addLog(message, source);
+                // 支持新的消息格式（对象）和向后兼容（字符串）
+                if (typeof messageOrData === 'object' && (messageOrData.userMessage !== undefined || messageOrData.devMessage !== undefined)) {
+                    this.components.logSystem.addLog(messageOrData, source);
+                } else {
+                    // 向后兼容：字符串格式，buff消息通常不显示在弹幕
+                    this.components.logSystem.addLog({
+                        userMessage: '',
+                        devMessage: typeof messageOrData === 'string' ? messageOrData : JSON.stringify(messageOrData)
+                    }, source);
+                }
             }
         });
+        
+        // 如果游戏已结束，停止后续处理
+        if (!shouldContinue) {
+            this.checkGameOver();
+            return;
+        }
+        
+        // 检查下一个玩家是谁
+        const nextPlayer = this.gameState.getCurrentPlayer();
+        
+        // 更新UI
         this.components.elements.endTurnBtn.disabled = true;
-        this.components.logSystem.addLog('对手的回合！', 'opponent');
-
-        // 更新回合高亮
         this.components.uiManager.updateTurnHighlight();
-
-        // 立即更新能量显示和对手手牌（确保显示同步）
         this.components.displayManager.update(this.gameState);
+        
+        // 根据下一个玩家类型处理
+        if (nextPlayer) {
+            if (nextPlayer.isAutoBot) {
+                // 自动机器人回合已经在 GameState.startTurn() 中处理了（包括抽牌和执行）
+                // 等待自动机器人出牌完成，然后继续下一个回合
+                setTimeout(() => {
+                    if (this.gameState.checkGameOver()) {
+                        this.checkGameOver();
+                        return;
+                    }
+                    // 更新显示
+                    this.components.displayManager.update(this.gameState);
+                    // 自动机器人回合结束后，继续下一个回合
+                    this.processNextTurn();
+                }, 2000); // 增加等待时间，确保自动机器人出牌动画完成
+            } else if (nextPlayer.name === 'opponent') {
+                // 对手回合
+        this.components.logSystem.addLog({
+            userMessage: '对手的回合！',
+            devMessage: `[Turn] 对手回合开始 | Turn: ${this.gameState.turnNumber} | Opponent Mana: ${this.gameState.opponent.mana}/${this.gameState.opponent.maxMana} | Hand: ${this.gameState.opponent.hand.length} cards`
+        }, 'system');
+
+                this.components.displayManager.updateHand('opponent', this.gameState.opponent.hand, this.components.cardRenderer, {
+                    draggable: false
+                });
+                
+                setTimeout(() => {
+                    if (this.gameState.checkGameOver()) {
+                        this.checkGameOver();
+                        return;
+                    }
+                    this.opponentTurn();
+                }, 1000);
+            } else if (nextPlayer.name === 'player') {
+                // 又回到玩家回合
+                this.startPlayerTurn();
+            }
+        }
+    }
+    
+    /**
+     * 处理下一个回合（用于自动机器人回合后的流程）
+     */
+    processNextTurn() {
+        // 检查游戏是否已结束
+        if (this.gameState.checkGameOver()) {
+            this.checkGameOver();
+            return;
+        }
+        
+        // 切换到下一个玩家
+        const shouldContinue = this.turnManager.endTurn((messageOrData, source) => {
+            if (this.components.logSystem) {
+                if (typeof messageOrData === 'object' && (messageOrData.userMessage !== undefined || messageOrData.devMessage !== undefined)) {
+                    this.components.logSystem.addLog(messageOrData, source);
+                } else {
+                    this.components.logSystem.addLog({
+                        userMessage: '',
+                        devMessage: typeof messageOrData === 'string' ? messageOrData : JSON.stringify(messageOrData)
+                    }, source);
+                }
+            }
+        });
+        
+        if (!shouldContinue) {
+            this.checkGameOver();
+            return;
+        }
+        
+        const nextPlayer = this.gameState.getCurrentPlayer();
+        if (!nextPlayer) return;
+        
+        // 更新显示
+        this.components.uiManager.updateTurnHighlight();
+        this.components.displayManager.update(this.gameState);
+        
+        // 根据下一个玩家类型继续处理
+        if (nextPlayer.isAutoBot) {
+            // 继续处理自动机器人回合
+            setTimeout(() => {
+                this.processNextTurn();
+            }, 1000);
+        } else if (nextPlayer.name === 'opponent') {
+            // 对手回合
+            this.components.logSystem.addLog({
+                userMessage: '对手的回合！',
+                devMessage: `[Turn] 对手回合开始 | Turn: ${this.gameState.turnNumber} | Opponent Mana: ${this.gameState.opponent.mana}/${this.gameState.opponent.maxMana} | Hand: ${this.gameState.opponent.hand.length} cards`
+            }, 'system');
+            
         this.components.displayManager.updateHand('opponent', this.gameState.opponent.hand, this.components.cardRenderer, {
             draggable: false
         });
 
-        // 对手回合
         setTimeout(() => {
+            if (this.gameState.checkGameOver()) {
+                this.checkGameOver();
+                return;
+            }
             this.opponentTurn();
         }, 1000);
+        } else if (nextPlayer.name === 'player') {
+            // 玩家回合
+            this.startPlayerTurn();
+        }
     }
 
     /**
@@ -109,8 +253,10 @@ class GameFlowController {
         }
         
         // 立即更新显示，确保抽牌效果可见（同步更新）
-        // 对手回合不需要玩家卡牌交互选项，只需更新显示
-        this.components.uiManager.updateDisplay();
+        // 对手回合不需要玩家卡牌交互选项，但为了保持一致性，传递空选项
+        this.components.uiManager.updateDisplay(
+            this.components.getCardPlayOptions ? this.components.getCardPlayOptions() : undefined
+        );
         
         // 确保对手手牌已更新（显式更新）
         this.components.displayManager.updateHand('opponent', this.gameState.opponent.hand, this.components.cardRenderer, {
@@ -128,12 +274,30 @@ class GameFlowController {
             this.components.cardPlayManager.playOpponentCardSequence(
                 cardsToPlay, 
                 0, 
-                () => this.components.uiManager.updateDisplay()
+                () => {
+                    // 检查游戏是否已结束
+                    if (this.gameState.checkGameOver()) {
+                        this.checkGameOver();
+                        return;
+                    }
+                    this.components.uiManager.updateDisplay(
+                        this.components.getCardPlayOptions ? this.components.getCardPlayOptions() : undefined
+                    );
+                    // 更新背景 GitGraph
+                    if (this.components.updateBackgroundGitGraph) {
+                        this.components.updateBackgroundGitGraph();
+                    }
+                }
             );
         }
 
         // 结束对手回合，开始玩家回合
         setTimeout(() => {
+            // 检查游戏是否已结束
+            if (this.gameState.checkGameOver()) {
+                this.checkGameOver();
+                return;
+            }
             this.startPlayerTurn();
         }, totalDelay);
     }
@@ -143,11 +307,27 @@ class GameFlowController {
      */
     startPlayerTurn() {
         // 传递日志回调函数，用于记录buff效果
-        this.turnManager.startPlayerTurn((message, source) => {
+        const shouldContinue = this.turnManager.startPlayerTurn((messageOrData, source) => {
             if (this.components.logSystem) {
-                this.components.logSystem.addLog(message, source);
+                // 支持新的消息格式（对象）和向后兼容（字符串）
+                if (typeof messageOrData === 'object' && (messageOrData.userMessage !== undefined || messageOrData.devMessage !== undefined)) {
+                    this.components.logSystem.addLog(messageOrData, source);
+                } else {
+                    // 向后兼容：字符串格式，buff消息通常不显示在弹幕
+                    this.components.logSystem.addLog({
+                        userMessage: '',
+                        devMessage: typeof messageOrData === 'string' ? messageOrData : JSON.stringify(messageOrData)
+                    }, source);
+                }
             }
         });
+        
+        // 如果游戏已结束，停止后续处理
+        if (!shouldContinue) {
+            this.checkGameOver();
+            return;
+        }
+        
         // 玩家回合开始时增加回合数
         this.gameState.turnNumber++;
         this.components.uiManager.updateTurnNumber();
@@ -158,7 +338,10 @@ class GameFlowController {
             }
         }
         this.components.elements.endTurnBtn.disabled = false;
-        this.components.logSystem.addLog('你的回合！', 'player');
+        this.components.logSystem.addLog({
+            userMessage: '你的回合！',
+            devMessage: `[Turn] 玩家回合开始 | Turn: ${this.gameState.turnNumber} | Mana: ${this.gameState.player.mana}/${this.gameState.player.maxMana} | Hand: ${this.gameState.player.hand.length} cards`
+        }, 'system');
 
         // 清除上一回合的卡牌高亮
         this.components.cardAnimation.clearTurnHighlights(this.gameState.currentTurnCards);
@@ -181,9 +364,15 @@ class GameFlowController {
     checkAutoEndTurn() {
         if (this.turnManager.canAutoEndTurn()) {
             if (this.gameState.player.hand.length > 0) {
-                this.components.logSystem.addLog(`剩余能量(${this.gameState.player.mana})不足以打出任何卡牌，自动结束回合！`, 'system');
+                this.components.logSystem.addLog({
+                    userMessage: `剩余能量(${this.gameState.player.mana})不足以打出任何卡牌，自动结束回合！`,
+                    devMessage: `[AutoEnd] 能量不足自动结束回合 | Mana: ${this.gameState.player.mana}/${this.gameState.player.maxMana} | Hand: ${this.gameState.player.hand.length} cards | Playable: ${this.gameState.player.hand.filter(c => c.cost <= this.gameState.player.mana).length}`
+                }, 'system');
             } else {
-                this.components.logSystem.addLog('手牌已空，自动结束回合！', 'system');
+                this.components.logSystem.addLog({
+                    userMessage: '手牌已空，自动结束回合！',
+                    devMessage: `[AutoEnd] 手牌为空自动结束回合 | Hand: 0 cards | Mana: ${this.gameState.player.mana}/${this.gameState.player.maxMana}`
+                }, 'system');
             }
 
             setTimeout(() => {
@@ -200,10 +389,16 @@ class GameFlowController {
     checkGameOver() {
         const winner = this.gameState.checkGameOver();
         if (winner === 'opponent') {
-            this.components.logSystem.addLog('你被击败了！游戏结束！', 'game');
+            this.components.logSystem.addLog({
+                userMessage: '你被击败了！游戏结束！',
+                devMessage: `[GameOver] 玩家失败 | Turn: ${this.gameState.turnNumber} | Player Health: ${this.gameState.player.health}/${this.gameState.player.maxHealth} | Opponent Health: ${this.gameState.opponent.health}/${this.gameState.opponent.maxHealth}`
+            }, 'game');
             this.gameOver('opponent');
         } else if (winner === 'player') {
-            this.components.logSystem.addLog('你获胜了！恭喜！', 'game');
+            this.components.logSystem.addLog({
+                userMessage: '你获胜了！恭喜！',
+                devMessage: `[GameOver] 玩家胜利 | Turn: ${this.gameState.turnNumber} | Player Health: ${this.gameState.player.health}/${this.gameState.player.maxHealth} | Opponent Health: ${this.gameState.opponent.health}/${this.gameState.opponent.maxHealth}`
+            }, 'game');
             this.gameOver('player');
         }
     }

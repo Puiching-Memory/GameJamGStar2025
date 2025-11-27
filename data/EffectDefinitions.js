@@ -358,5 +358,20 @@ function initializeEffects(registry) {
             }
         });
     });
+
+    // 自动打出Git原子操作效果
+    registry.register('autoPlayGitOperation', (config) => {
+        return new window.AutoPlayGitOperationEffect({
+            name: '自动Git操作',
+            description: `每回合自动执行git原子操作（持续${config.duration || 6}回合）`,
+            operations: config.operations || [
+                'add', 'commit', 'push', 'pull', 'fetch',
+                'branch', 'checkout', 'merge', 'status', 'log'
+            ],
+            buffName: config.buffName || '自动Git操作',
+            buffIcon: config.buffIcon || '🤖',
+            duration: config.duration || 6
+        });
+    });
 }
 

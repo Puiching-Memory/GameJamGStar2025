@@ -122,7 +122,8 @@ class GameUIManager {
     updateTurnHighlight() {
         if (!this.elements.playerHeaderInfo || !this.elements.opponentHeaderInfo) return;
 
-        if (this.gameState.turn === 'player') {
+        const currentPlayer = this.gameState.getCurrentPlayer();
+        if (currentPlayer && currentPlayer.name === 'player') {
             // 玩家回合：高亮玩家信息区域
             this.elements.playerHeaderInfo.classList.add('active-turn');
             this.elements.opponentHeaderInfo.classList.remove('active-turn');

@@ -10,13 +10,34 @@ class GameMessageLog {
 
     /**
      * 添加消息到日志
-     * @param {string} message - 消息内容
+     * @param {string|object} messageOrData - 消息内容（字符串）或消息数据对象
+     *   - 如果是字符串：向后兼容，同时用作用户和开发者消息
+     *   - 如果是对象：{ userMessage, devMessage } 或 { message }（向后兼容）
      * @param {string} source - 消息来源 ('player', 'opponent', 'system', 'game')
-     * @param {object} options - 可选参数 (icon, color)
+     * @param {object} options - 可选参数 (icon, color, userMessage, devMessage)
      */
-    addMessage(message, source = 'system', options = {}) {
+    addMessage(messageOrData, source = 'system', options = {}) {
+        let messageData = {};
+        
+        // 处理不同的输入格式
+        if (typeof messageOrData === 'string') {
+            // 向后兼容：字符串格式
+            messageData.message = messageOrData;
+        } else if (typeof messageOrData === 'object') {
+            // 新格式：对象格式
+            messageData = { ...messageOrData };
+        }
+        
+        // 如果 options 中提供了 userMessage 或 devMessage，优先使用
+        if (options.userMessage !== undefined) {
+            messageData.userMessage = options.userMessage;
+        }
+        if (options.devMessage !== undefined) {
+            messageData.devMessage = options.devMessage;
+        }
+        
         const gameMessage = new GameMessage({
-            message,
+            ...messageData,
             source,
             icon: options.icon,
             color: options.color

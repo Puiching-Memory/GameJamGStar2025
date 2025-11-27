@@ -22,20 +22,24 @@
     <link rel="stylesheet" href="css/components/modal.css">
     <link rel="stylesheet" href="css/components/log.css">
     <link rel="stylesheet" href="css/components/tooltip.css">
+    <link rel="stylesheet" href="css/components/multi-player.css">
     
     <!-- 动画样式 -->
     <link rel="stylesheet" href="css/animations/keyframes.css">
     
     <!-- 响应式样式 -->
     <link rel="stylesheet" href="css/responsive/media-queries.css">
+    
+    <!-- Mermaid.js 用于渲染 GitGraph（本地文件，完全离线） -->
+    <script src="lib/mermaid.min.js"></script>
 </head>
 <body>
     <div class="game-container">
         <!-- 屏幕伤害闪烁效果 -->
         <div class="screen-damage-flash" id="screen-damage-flash"></div>
         
-        <!-- 左侧：对手状态 - 独立浮动区域 -->
-        <div class="header-player-info opponent-header-info floating-status">
+        <!-- 左侧：对手状态 - 独立浮动区域（向后兼容） -->
+        <div class="header-player-info opponent-header-info floating-status" id="opponent-header-info">
                 <div class="player-name">🤖 对手</div>
                 <div class="stats-container">
                     <div class="health-bar-wrapper">
@@ -60,8 +64,8 @@
                 <div class="turn-number" id="turn-number">第 0 回合</div>
             </div>
 
-        <!-- 右侧：玩家状态 - 独立浮动区域 -->
-        <div class="header-player-info player-header-info floating-status">
+        <!-- 右侧：玩家状态 - 独立浮动区域（向后兼容） -->
+        <div class="header-player-info player-header-info floating-status" id="player-header-info">
                 <div class="player-name">👤 你</div>
                 <div class="stats-container">
                     <div class="health-bar-wrapper">
@@ -80,6 +84,15 @@
             </div>
         </div>
 
+        <!-- 玩家队伍的自动机器人容器 -->
+        <div class="auto-bot-container player-auto-bot-container" id="player-auto-bot-container"></div>
+
+        <!-- 对手队伍的自动机器人容器 -->
+        <div class="auto-bot-container opponent-auto-bot-container" id="opponent-auto-bot-container"></div>
+
+        <!-- 多人玩家状态栏容器（用于非自动机器人的额外玩家） -->
+        <div class="multi-player-status-container" id="multi-player-status-container"></div>
+
         <!-- 对手手牌区域 - 浮动窗口 -->
         <div class="hand-area" id="opponent-hand"></div>
 
@@ -91,6 +104,8 @@
             <!-- 中央：拖拽区域（独占中间，左右顶满） -->
             <div class="center-panel">
                 <div class="drop-zone" id="drop-zone">
+                    <!-- GitGraph 背景层 -->
+                    <div class="gitgraph-background" id="gitgraph-background"></div>
                     <div class="drop-zone-hint" id="drop-zone-hint">⬇️ 拖拽卡牌到这里使用 ⬇️</div>
                     <div class="played-cards-container" id="played-cards-container"></div>
                 </div>
@@ -98,6 +113,8 @@
                 <div class="center-controls">
                     <button class="btn btn-primary" id="start-game-btn">开始游戏</button>
                     <button class="btn btn-secondary" id="end-turn-btn" disabled>结束回合</button>
+                    <button class="btn btn-secondary" id="show-gitgraph-btn">gitgraph</button>
+                    <button class="btn btn-secondary" id="show-console-btn">查看日志</button>
                 </div>
             </div>
 
@@ -132,6 +149,28 @@
                 <button class="btn btn-primary" id="game-over-close-btn">确定</button>
             </div>
         </div>
+
+        <!-- GitGraph 显示对话框 -->
+        <div class="modal" id="gitgraph-modal">
+            <div class="modal-content gitgraph-modal-content">
+                <span class="close" id="gitgraph-modal-close-btn">&times;</span>
+                <h2>卡牌操作 GitGraph</h2>
+                <div id="gitgraph-container"></div>
+            </div>
+        </div>
+
+        <!-- Console Log 显示对话框 -->
+        <div class="modal" id="console-modal">
+            <div class="modal-content console-modal-content">
+                <span class="close" id="console-modal-close-btn">&times;</span>
+                <h2>游戏日志</h2>
+                <div class="console-controls">
+                    <button class="btn btn-small" id="console-clear-btn">清空</button>
+                    <button class="btn btn-small" id="console-auto-scroll-btn">自动滚动: 开启</button>
+                </div>
+                <div id="console-container"></div>
+            </div>
+        </div>
     </div>
 
     <!-- 核心模块 -->
@@ -139,6 +178,7 @@
     <script src="core/Player.js"></script>
     <script src="core/Card.js"></script>
     <script src="core/Buff.js"></script>
+    <script src="core/Team.js"></script>
     <script src="core/EffectComponent.js"></script>
     <script src="core/EffectRegistry.js"></script>
     <script src="core/GameMessage.js"></script>
@@ -155,6 +195,7 @@
     <script src="gameplay/CardEffect.js"></script>
     <script src="gameplay/TurnManager.js"></script>
     <script src="gameplay/AI.js"></script>
+    <script src="gameplay/AutoBotAI.js"></script>
     
     <!-- UI模块 -->
     <script src="ui/LogSystem.js"></script>
@@ -162,6 +203,8 @@
     <script src="ui/ManaDisplay.js"></script>
     <script src="ui/BuffRenderer.js"></script>
     <script src="ui/CardRenderer.js"></script>
+    <script src="ui/PlayerStatusBar.js"></script>
+    <script src="ui/MultiPlayerDisplay.js"></script>
     <script src="ui/DisplayManager.js"></script>
     <script src="ui/Tooltip.js"></script>
     
@@ -177,6 +220,9 @@
     <script src="game/managers/ScreenEffectManager.js"></script>
     <script src="game/managers/ComboBuffHandler.js"></script>
     <script src="game/managers/CardPlayManager.js"></script>
+    <script src="game/managers/GitGraphGenerator.js"></script>
+    <script src="game/managers/ConsoleManager.js"></script>
+    <script src="game/managers/GitGraphManager.js"></script>
     <script src="game/managers/GameUIManager.js"></script>
     <script src="game/managers/GameFlowController.js"></script>
     <script src="game/managers/GameEventManager.js"></script>

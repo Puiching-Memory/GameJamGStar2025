@@ -3,8 +3,9 @@
  * 负责管理单个玩家的状态数据
  */
 class Player {
-    constructor(name) {
+    constructor(name, isAI = false) {
         this.name = name;
+        this.isAI = isAI; // 是否为AI玩家
         this.maxHealth = 100; // 最大生命值
         this.health = 100;
         this.hand = [];
@@ -12,6 +13,9 @@ class Player {
         this.mana = 3;
         this.maxMana = 3;
         this.buffs = []; // buff列表
+        this.team = null; // 所属队伍
+        this.isAutoBot = false; // 是否为自动机器人
+        this.autoBotType = null; // 自动机器人类型（'github-action' 或 'cl-bot'）
     }
 
     /**
@@ -38,14 +42,18 @@ class Player {
      * @param {EventSystem} eventSystem - 可选的事件系统，用于触发治疗事件
      */
     addHealth(amount, eventSystem = null) {
+        if (amount <= 0) return; // 如果没有治疗量，直接返回
+        
         const oldHealth = this.health;
         this.setHealth(this.health + amount);
+        const actualHeal = this.health - oldHealth;
         
         // 触发治疗事件（只有实际治疗时才触发）
-        if (eventSystem && this.health > oldHealth && amount > 0) {
+        // 注意：即使生命值达到上限，只要实际有治疗量，也应该触发事件
+        if (eventSystem && actualHeal > 0) {
             eventSystem.emit('player:heal', {
                 player: this.name,
-                heal: this.health - oldHealth,
+                heal: actualHeal,
                 oldHealth: oldHealth,
                 newHealth: this.health
             });
@@ -58,6 +66,11 @@ class Player {
      * @param {EventSystem} eventSystem - 可选的事件系统，用于触发扣血事件
      */
     takeDamage(amount, eventSystem = null) {
+        // 自动机器人不受伤害
+        if (this.isAutoBot) {
+            return 0;
+        }
+        
         // 先计算护盾吸收
         const shieldValue = this.getBuffValue('shield');
         let remainingDamage = amount;
@@ -100,7 +113,8 @@ class Player {
                     player: this.name,
                     damage: actualDamage,
                     oldHealth: oldHealth,
-                    newHealth: this.health
+                    newHealth: this.health,
+                    isDead: this.health <= 0  // 添加死亡标志
                 });
             }
         }
@@ -229,17 +243,35 @@ class Player {
      * @param {GameState} gameState - 游戏状态（用于需要访问gameState的buff）
      */
     processTurnStartBuffs(logCallback = null, gameState = null) {
-        this.buffs.forEach(buff => {
+        // 如果生命值为0，不处理buff
+        if (this.health <= 0) {
+            return;
+        }
+        
+        console.log(`Player.processTurnStartBuffs: 处理 ${this.name} 的 ${this.buffs.length} 个buff`);
+        
+        this.buffs.forEach((buff, index) => {
+            // 如果生命值为0，停止处理buff
+            if (this.health <= 0) {
+                return;
+            }
+            
+            console.log(`Player.processTurnStartBuffs: 处理buff ${index + 1}/${this.buffs.length}: ${buff.name}, hasOnTurnStart: ${!!buff.onTurnStart}`);
+            
             if (buff.onTurnStart) {
                 let result = buff.onTurnStart(this, logCallback, gameState);
+                console.log(`Player.processTurnStartBuffs: buff.onTurnStart返回:`, typeof result, result);
                 
                 // 如果返回的是函数，说明需要gameState参数
                 if (typeof result === 'function' && gameState) {
+                    console.log(`Player.processTurnStartBuffs: 调用返回的函数，传入gameState`);
                     result = result(gameState);
+                    console.log(`Player.processTurnStartBuffs: 函数执行结果:`, result);
                 }
                 
                 // 如果buff的onTurnStart返回了日志消息，且提供了日志回调，则记录日志
                 if (result && typeof result === 'object' && result.message && logCallback) {
+                    console.log(`Player.processTurnStartBuffs: 调用logCallback记录消息:`, result.message);
                     logCallback(result.message, result.source || 'system');
                 }
             }
@@ -250,8 +282,18 @@ class Player {
      * 处理回合结束时的buff效果并减少持续时间
      */
     processTurnEndBuffs() {
+        // 如果生命值为0，不处理buff
+        if (this.health <= 0) {
+            return;
+        }
+        
         const expiredBuffs = [];
         this.buffs.forEach(buff => {
+            // 如果生命值为0，停止处理buff
+            if (this.health <= 0) {
+                return;
+            }
+            
             if (buff.onTurnEnd) {
                 buff.onTurnEnd(this);
             }

@@ -5,12 +5,16 @@
  */
 class Card {
     constructor(data) {
+        // 保存原始ID（用于识别卡牌类型）
+        this.baseId = data.id;
+        // 生成唯一ID（包含时间戳和随机数）
         this.id = data.id + '_' + Date.now() + '_' + Math.random();
         this.name = data.name;
         this.icon = data.icon;
         this.cost = data.cost;
         this.power = data.power || 0;
-        this.heal = data.heal || 0;
+        // 确保 heal 属性正确传递（即使值为 0 也要保留）
+        this.heal = data.heal !== undefined ? data.heal : 0;
         this.draw = data.draw || 0;
         this.description = data.description;
         this.type = data.type;

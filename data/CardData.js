@@ -160,7 +160,7 @@ const CARD_DATA = [
         icon: '⏪',
         cost: 2,
         power: 0,
-        description: '重置操作\n移除对手手牌\n消耗对手能量\n获得护盾',
+        description: '重置操作\n移除对手手牌\n获得护盾',
         type: 'special'
     },
     {
@@ -272,7 +272,7 @@ const CARD_DATA = [
         icon: '⚙️',
         cost: 2,
         power: 0,
-        description: '配置仓库\n增加生命上限\n每回合恢复生命\n获得护盾\n每回合恢复能量',
+        description: '配置仓库\n增加生命上限\n每回合恢复生命',
         type: 'special'
     },
 
@@ -283,7 +283,7 @@ const CARD_DATA = [
         icon: '🔄',
         cost: 3,
         power: 0,
-        description: '自动工作流\n能量上限提升\n每回合恢复能量',
+        description: '持续集成工作流\n持续8回合\n专注部署操作',
         type: 'special'
     },
     {
@@ -292,7 +292,7 @@ const CARD_DATA = [
         icon: '🤖',
         cost: 3,
         power: 0,
-        description: '自动化助手\n每回合自动攻击\n获得连击：每使用卡牌造成额外伤害',
+        description: '代码审查助手\n持续5回合\n专注审查操作',
         type: 'special'
     }
 ];

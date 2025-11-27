@@ -29,10 +29,10 @@ class ComboBuffHandler {
                     
                     if (actualDamage > 0 && this.logSystem) {
                         const source = playerName === 'player' ? 'player' : 'opponent';
-                        this.logSystem.addLog(
-                            `⚡ ${buff.name} 触发，造成 ${actualDamage} 点额外伤害！`,
-                            source
-                        );
+                        this.logSystem.addLog({
+                            userMessage: '', // 不显示在弹幕
+                            devMessage: `[ComboBuff] ${buff.name} 触发 | Player: ${playerName} | Buff Value: ${buff.value} | Calculated Damage: ${damage} | Actual Damage: ${actualDamage} | Target Health: ${opponent.health}/${opponent.maxHealth}`
+                        }, source);
                     }
                 }
             });

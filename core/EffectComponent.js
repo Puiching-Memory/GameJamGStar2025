@@ -55,7 +55,23 @@ class DamageEffect extends EffectComponent {
 
     execute(context) {
         const { gameState, target, cardUser } = context;
-        const targetPlayer = target === 'opponent' ? gameState.opponent : gameState.player;
+        // 通过名称查找目标玩家（支持自动机器人）
+        const targetPlayer = gameState.getPlayerByName(target);
+        if (!targetPlayer) {
+            return {
+                message: `目标 ${target} 不存在！`,
+                source: cardUser
+            };
+        }
+        
+        // 如果目标是自动机器人，不受伤害
+        if (targetPlayer.isAutoBot) {
+            return {
+                message: `自动机器人不受伤害！`,
+                source: cardUser
+            };
+        }
+        
         const userPlayer = cardUser === 'opponent' ? gameState.opponent : gameState.player;
         
         let damage = this.baseDamage;
@@ -442,6 +458,106 @@ class CompositeEffect extends EffectComponent {
     }
 }
 
+/**
+ * 自动打出Git原子操作效果组件
+ * 每回合开始时自动随机选择一个git原子操作并执行
+ */
+class AutoPlayGitOperationEffect extends EffectComponent {
+    constructor(config) {
+        super(config);
+        // Git原子操作列表（基础操作）
+        this.gitOperations = config.operations || [
+            'add',      // 暂存文件
+            'commit',   // 提交更改
+            'push',     // 推送代码
+            'pull',     // 拉取代码
+            'fetch',    // 获取更新
+            'branch',   // 创建分支
+            'checkout', // 切换分支
+            'merge',    // 合并分支
+            'status',   // 查看状态
+            'log'       // 查看历史
+        ];
+        this.buffName = config.buffName || '自动Git操作';
+        this.buffIcon = config.buffIcon || '🤖';
+        this.duration = config.duration || 6;
+    }
+
+    execute(context) {
+        const { gameState, cardUser, cardFactory } = context;
+        const userPlayer = cardUser === 'opponent' ? gameState.opponent : gameState.player;
+        
+        // 保存到局部变量，避免闭包中的this上下文问题
+        const buffName = this.buffName;
+        const buffIcon = this.buffIcon;
+        const gitOperations = this.gitOperations;
+        const duration = this.duration;
+        
+        // 确定机器人类型
+        const botType = buffName.includes('GitHub Action') ? 'github-action' : 'cl-bot';
+        
+        console.log(`AutoPlayGitOperationEffect.execute: 为 ${cardUser} 创建自动机器人 ${buffName}`);
+        
+        // 创建自动机器人玩家
+        const botId = `${botType}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        const botPlayer = new Player(botId, true);
+        botPlayer.isAutoBot = true;
+        botPlayer.autoBotType = botType;
+        botPlayer.maxHealth = 50; // 自动机器人生命值较低
+        botPlayer.health = 50;
+        botPlayer.mana = 999; // 能量固定999
+        botPlayer.maxMana = 999;
+        botPlayer.hand = []; // 没有初始手牌
+        botPlayer.deck = []; // 没有牌堆
+        botPlayer.autoBotLifetime = duration; // 生命周期（回合数）
+        botPlayer.autoBotTurnsRemaining = duration; // 剩余回合数
+        
+        // 将机器人添加到游戏状态
+        gameState.addPlayer(botPlayer, userPlayer.team); // 添加到使用者的队伍
+        
+        // 创建自动机器人AI，传入允许的操作列表
+        const autoBotAI = new AutoBotAI(gameState, cardFactory, botPlayer, botType, gitOperations);
+        gameState.registerAI(botId, autoBotAI);
+        
+        // 创建buff，在每回合开始时自动执行git操作（通过AI）
+        const buff = new Buff({
+            name: buffName,
+            icon: buffIcon,
+            type: 'special',
+            value: 0,
+            duration: duration,
+            description: '每回合自动执行git原子操作',
+            stackable: false,
+            onTurnStart: (player, logCallback) => {
+                // 这个buff现在不再使用，因为自动机器人有自己的回合
+                // 保留这个结构以保持兼容性
+                return null;
+            }
+        });
+        
+        // 不再添加buff，而是创建了自动机器人玩家
+        // 触发玩家添加事件（只发送必要的数据，避免循环引用）
+        if (gameState.eventSystem) {
+            gameState.eventSystem.emit('player:added', {
+                playerId: botPlayer.name, // 用于查找玩家
+                name: botPlayer.name, // 备用字段
+                isAutoBot: botPlayer.isAutoBot,
+                autoBotType: botPlayer.autoBotType,
+                health: botPlayer.health,
+                maxHealth: botPlayer.maxHealth,
+                mana: botPlayer.mana,
+                maxMana: botPlayer.maxMana,
+                teamId: userPlayer.team ? userPlayer.team.id : null
+            });
+        }
+        
+        return {
+            message: `🤖 ${buffName} 已加入战斗！每回合自动执行git原子操作`,
+            source: cardUser
+        };
+    }
+}
+
 // 暴露到全局作用域
 window.EffectComponent = EffectComponent;
 window.DamageEffect = DamageEffect;
@@ -455,4 +571,5 @@ window.ManaDrainEffect = ManaDrainEffect;
 window.ShieldEffect = ShieldEffect;
 window.CopyCardEffect = CopyCardEffect;
 window.CompositeEffect = CompositeEffect;
+window.AutoPlayGitOperationEffect = AutoPlayGitOperationEffect;
 
