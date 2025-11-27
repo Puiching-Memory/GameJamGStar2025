@@ -1,12 +1,15 @@
 /**
  * 日志系统
- * 负责管理游戏日志显示
+ * 负责管理游戏日志显示、消息历史记录和消息数据模型
  */
 class LogSystem {
-    constructor(container, messageLog = null, consoleCallback = null) {
+    constructor(container, consoleCallback = null) {
         this.container = container;
-        this.messageLog = messageLog || new GameMessageLog();
         this.consoleCallback = consoleCallback; // 用于将日志输出到console窗口的回调
+        
+        // 消息历史记录
+        this.messages = [];
+        this.maxHistorySize = 100; // 最大历史记录数
     }
 
     /**
@@ -36,8 +39,21 @@ class LogSystem {
             messageData.devMessage = options.devMessage;
         }
         
-        // 添加到消息日志
-        const gameMessage = this.messageLog.addMessage(messageData, source, options);
+        // 创建游戏消息对象
+        const gameMessage = this._createMessage({
+            ...messageData,
+            source,
+            icon: options.icon,
+            color: options.color
+        });
+
+        // 添加到历史记录
+        this.messages.push(gameMessage);
+        
+        // 限制历史记录大小
+        if (this.messages.length > this.maxHistorySize) {
+            this.messages.shift();
+        }
 
         // 弹幕只显示系统信息（'system' 或 'game'），不显示打牌时的log（'player' 或 'opponent'）
         const shouldShowInDanmaku = source === 'system' || source === 'game';
@@ -92,20 +108,109 @@ class LogSystem {
     }
 
     /**
+     * 创建游戏消息对象（内部方法）
+     * @private
+     */
+    _createMessage(data) {
+        const message = {
+            id: data.id || 'msg_' + Date.now() + '_' + Math.random(),
+            source: data.source || 'system',
+            timestamp: data.timestamp || Date.now(),
+            icon: data.icon || this._getDefaultIcon(data.source),
+            color: data.color || this._getDefaultColor(data.source)
+        };
+        
+        // 支持两种消息格式：
+        // - userMessage: 用户友好的消息（用于弹幕显示）
+        // - devMessage: 开发者友好的消息（用于日志显示）
+        // 如果只提供了 message，则同时用作两种消息（向后兼容）
+        if (data.userMessage !== undefined || data.devMessage !== undefined) {
+            message.userMessage = data.userMessage || data.message || '';
+            message.devMessage = data.devMessage || data.message || '';
+        } else {
+            // 向后兼容：如果只提供了 message，同时用作两种消息
+            message.userMessage = data.message || '';
+            message.devMessage = data.message || '';
+        }
+        
+        // 添加方法
+        message.getUserDisplayText = () => {
+            const msg = message.userMessage || message.devMessage || '';
+            return `${message.icon} ${msg}`;
+        };
+        
+        message.getDevDisplayText = () => {
+            const msg = message.devMessage || message.userMessage || '';
+            return `${message.icon} ${msg}`;
+        };
+        
+        message.getDisplayText = () => message.getUserDisplayText();
+        
+        return message;
+    }
+
+    /**
+     * 根据来源获取默认图标
+     * @private
+     */
+    _getDefaultIcon(source) {
+        const icons = {
+            'player': '👤',
+            'opponent': '🤖',
+            'system': '⚙️',
+            'game': '🎮'
+        };
+        return icons[source] || '📢';
+    }
+
+    /**
+     * 根据来源获取默认颜色
+     * @private
+     */
+    _getDefaultColor(source) {
+        const colors = {
+            'player': '#4facfe', // 蓝色
+            'opponent': '#f5576c', // 红色
+            'system': '#667eea', // 紫色
+            'game': '#fbbf24' // 金色
+        };
+        return colors[source] || '#ffffff';
+    }
+
+    /**
      * 清空日志
      */
     clear() {
         this.container.innerHTML = '';
-        if (this.messageLog) {
-            this.messageLog.clear();
-        }
+        this.messages = [];
     }
 
     /**
-     * 获取消息日志管理器
+     * 获取所有消息
+     */
+    getAllMessages() {
+        return this.messages;
+    }
+
+    /**
+     * 根据来源获取消息
+     */
+    getMessagesBySource(source) {
+        return this.messages.filter(msg => msg.source === source);
+    }
+
+    /**
+     * 获取最近N条消息
+     */
+    getRecentMessages(count = 10) {
+        return this.messages.slice(-count);
+    }
+
+    /**
+     * 获取消息日志管理器（向后兼容）
+     * @deprecated 使用 LogSystem 的方法直接访问
      */
     getMessageLog() {
-        return this.messageLog;
+        return this;
     }
 }
-

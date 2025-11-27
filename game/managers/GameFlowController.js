@@ -126,7 +126,7 @@ class GameFlowController {
         // 更新UI
         this.components.elements.endTurnBtn.disabled = true;
         this.components.uiManager.updateTurnHighlight();
-        this.components.displayManager.update(this.gameState);
+        this.components.uiManager.update(this.gameState);
         
         // 根据下一个玩家类型处理
         if (nextPlayer) {
@@ -139,7 +139,7 @@ class GameFlowController {
                         return;
                     }
                     // 更新显示
-                    this.components.displayManager.update(this.gameState);
+                    this.components.uiManager.update(this.gameState);
                     // 自动机器人回合结束后，继续下一个回合
                     this.processNextTurn();
                 }, 2000); // 增加等待时间，确保自动机器人出牌动画完成
@@ -150,7 +150,7 @@ class GameFlowController {
             devMessage: `[Turn] 对手回合开始 | Turn: ${this.gameState.turnNumber} | Opponent Mana: ${this.gameState.opponent.mana}/${this.gameState.opponent.maxMana} | Hand: ${this.gameState.opponent.hand.length} cards`
         }, 'system');
 
-                this.components.displayManager.updateHand('opponent', this.gameState.opponent.hand, this.components.cardRenderer, {
+                this.components.uiManager.updateHand('opponent', this.gameState.opponent.hand, this.components.cardRenderer, {
                     draggable: false
                 });
                 
@@ -202,7 +202,7 @@ class GameFlowController {
         
         // 更新显示
         this.components.uiManager.updateTurnHighlight();
-        this.components.displayManager.update(this.gameState);
+        this.components.uiManager.update(this.gameState);
         
         // 根据下一个玩家类型继续处理
         if (nextPlayer.isAutoBot) {
@@ -217,7 +217,7 @@ class GameFlowController {
                 devMessage: `[Turn] 对手回合开始 | Turn: ${this.gameState.turnNumber} | Opponent Mana: ${this.gameState.opponent.mana}/${this.gameState.opponent.maxMana} | Hand: ${this.gameState.opponent.hand.length} cards`
             }, 'system');
             
-        this.components.displayManager.updateHand('opponent', this.gameState.opponent.hand, this.components.cardRenderer, {
+        this.components.uiManager.updateHand('opponent', this.gameState.opponent.hand, this.components.cardRenderer, {
             draggable: false
         });
 
@@ -259,7 +259,7 @@ class GameFlowController {
         );
         
         // 确保对手手牌已更新（显式更新）
-        this.components.displayManager.updateHand('opponent', this.gameState.opponent.hand, this.components.cardRenderer, {
+        this.components.uiManager.updateHand('opponent', this.gameState.opponent.hand, this.components.cardRenderer, {
             draggable: false
         });
 

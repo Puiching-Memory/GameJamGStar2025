@@ -1,15 +1,25 @@
 /**
  * 游戏UI管理器
  * 负责管理UI更新、动画、tooltip等
+ * 合并了 DisplayManager 的功能
  */
 class GameUIManager {
     constructor(gameState, elements, components) {
         this.gameState = gameState;
         this.elements = elements;
-        this.displayManager = components.displayManager;
+        this.components = components; // { playerHealthBar, opponentHealthBar, playerManaDisplay, opponentManaDisplay, buffRenderer }
         this.cardRenderer = components.cardRenderer;
-        this.handAnimationManager = components.handAnimationManager;
+        this.animationManager = components.handAnimationManager; // 实际上是 AnimationManager
         this.tooltip = null;
+        
+        // 多人显示管理器
+        this.multiPlayerDisplay = null;
+        if (elements.multiPlayerStatusContainer) {
+            this.multiPlayerDisplay = new MultiPlayerDisplay(
+                elements.multiPlayerStatusContainer,
+                components
+            );
+        }
         
         // 本回合新获得的手牌（用于入场动画）
         this.newPlayerHandCardIds = new Set();
@@ -144,10 +154,68 @@ class GameUIManager {
     }
 
     /**
+     * 更新所有显示（合并自 DisplayManager）
+     */
+    update(gameState) {
+        // 更新原有玩家和对手的显示
+        if (this.components.playerHealthBar) {
+            this.components.playerHealthBar.update(gameState.player.health, gameState.player.maxHealth);
+        }
+        if (this.components.opponentHealthBar) {
+            this.components.opponentHealthBar.update(gameState.opponent.health, gameState.opponent.maxHealth);
+        }
+
+        if (this.components.playerManaDisplay) {
+            this.components.playerManaDisplay.update(gameState.player.mana, gameState.player.maxMana);
+        }
+        if (this.components.opponentManaDisplay) {
+            this.components.opponentManaDisplay.update(gameState.opponent.mana, gameState.opponent.maxMana);
+        }
+
+        if (this.components.buffRenderer) {
+            if (this.elements.playerBuffsEl) {
+                this.components.buffRenderer.update(this.elements.playerBuffsEl, gameState.player.buffs);
+            }
+            if (this.elements.opponentBuffsEl) {
+                this.components.buffRenderer.update(this.elements.opponentBuffsEl, gameState.opponent.buffs);
+            }
+        }
+
+        // 多人模式：更新所有玩家状态栏
+        if (this.multiPlayerDisplay) {
+            // 如果有自动机器人或额外玩家，更新显示
+            const hasAutoBots = gameState.players.some(p => p.isAutoBot);
+            const hasExtraPlayers = gameState.players.some(p => 
+                p.name !== 'player' && p.name !== 'opponent' && !p.isAutoBot
+            );
+            
+            if (hasAutoBots || hasExtraPlayers) {
+                this.multiPlayerDisplay.update(gameState);
+            } else {
+                // 清除多人状态栏（回到双人模式）
+                this.multiPlayerDisplay.clear();
+            }
+        }
+    }
+
+    /**
+     * 更新手牌显示（合并自 DisplayManager）
+     */
+    updateHand(player, hand, cardRenderer, options = {}) {
+        const handEl = player === 'player' 
+            ? this.elements.playerHandEl 
+            : this.elements.opponentHandEl;
+        
+        if (handEl && cardRenderer) {
+            cardRenderer.renderHand(handEl, hand, player, options);
+        }
+    }
+
+    /**
      * 更新显示
      */
     updateDisplay(cardPlayOptions) {
-        this.displayManager.update(this.gameState);
+        this.update(this.gameState);
 
         // 记录更新前的手牌数量
         const currentPlayerHandSize = this.gameState.player.hand.length;
@@ -160,12 +228,12 @@ class GameUIManager {
         }
 
         // 更新手牌
-        this.displayManager.updateHand('player', this.gameState.player.hand, this.cardRenderer, {
+        this.updateHand('player', this.gameState.player.hand, this.cardRenderer, {
             enterAnimationCardIds: this.newPlayerHandCardIds,
             ...cardPlayOptions
         });
 
-        this.displayManager.updateHand('opponent', this.gameState.opponent.hand, this.cardRenderer, {
+        this.updateHand('opponent', this.gameState.opponent.hand, this.cardRenderer, {
             draggable: false,
             enterAnimationCardIds: this.newOpponentHandCardIds
         });
@@ -176,11 +244,11 @@ class GameUIManager {
 
         // 如果手牌数量发生变化，为对应手牌区域添加一次轻微的重排动画
         if (currentPlayerHandSize !== this.prevPlayerHandSize && this.elements.playerHandEl) {
-            this.handAnimationManager.triggerHandReflowAnimation(this.elements.playerHandEl);
+            this.animationManager.triggerHandReflowAnimation(this.elements.playerHandEl);
         }
         if (currentOpponentHandSize !== this.prevOpponentHandSize && this.elements.opponentHandEl) {
-            this.handAnimationManager.triggerHandReflowAnimation(this.elements.opponentHandEl);
-            this.handAnimationManager.animateOpponentHandResize(this.elements.opponentHandEl, opponentOldWidth);
+            this.animationManager.triggerHandReflowAnimation(this.elements.opponentHandEl);
+            this.animationManager.animateOpponentHandResize(this.elements.opponentHandEl, opponentOldWidth);
         }
 
         // 更新缓存的手牌数量

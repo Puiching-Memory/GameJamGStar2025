@@ -114,7 +114,6 @@
                     <button class="btn btn-primary" id="start-game-btn">开始游戏</button>
                     <button class="btn btn-secondary" id="end-turn-btn" disabled>结束回合</button>
                     <button class="btn btn-secondary" id="show-gitgraph-btn">gitgraph</button>
-                    <button class="btn btn-secondary" id="show-console-btn">查看日志</button>
                 </div>
             </div>
 
@@ -159,18 +158,6 @@
             </div>
         </div>
 
-        <!-- Console Log 显示对话框 -->
-        <div class="modal" id="console-modal">
-            <div class="modal-content console-modal-content">
-                <span class="close" id="console-modal-close-btn">&times;</span>
-                <h2>游戏日志</h2>
-                <div class="console-controls">
-                    <button class="btn btn-small" id="console-clear-btn">清空</button>
-                    <button class="btn btn-small" id="console-auto-scroll-btn">自动滚动: 开启</button>
-                </div>
-                <div id="console-container"></div>
-            </div>
-        </div>
     </div>
 
     <!-- 核心模块 -->
@@ -181,8 +168,6 @@
     <script src="core/Team.js"></script>
     <script src="core/EffectComponent.js"></script>
     <script src="core/EffectRegistry.js"></script>
-    <script src="core/GameMessage.js"></script>
-    <script src="core/GameMessageLog.js"></script>
     <script src="core/GameState.js"></script>
     
     <!-- 数据模块 -->
@@ -205,27 +190,22 @@
     <script src="ui/CardRenderer.js"></script>
     <script src="ui/PlayerStatusBar.js"></script>
     <script src="ui/MultiPlayerDisplay.js"></script>
-    <script src="ui/DisplayManager.js"></script>
     <script src="ui/Tooltip.js"></script>
     
     <!-- 交互模块 -->
     <script src="interaction/DragDrop.js"></script>
     
     <!-- 动画模块 -->
-    <script src="animation/AnimationSystem.js"></script>
+    <script src="animation/DOMProtectionManager.js"></script>
     <script src="animation/CardAnimation.js"></script>
     
     <!-- 游戏管理器模块 -->
-    <script src="game/managers/HandAnimationManager.js"></script>
-    <script src="game/managers/ScreenEffectManager.js"></script>
-    <script src="game/managers/ComboBuffHandler.js"></script>
+    <script src="game/managers/AnimationManager.js"></script>
     <script src="game/managers/CardPlayManager.js"></script>
     <script src="game/managers/GitGraphGenerator.js"></script>
-    <script src="game/managers/ConsoleManager.js"></script>
     <script src="game/managers/GitGraphManager.js"></script>
     <script src="game/managers/GameUIManager.js"></script>
     <script src="game/managers/GameFlowController.js"></script>
-    <script src="game/managers/GameEventManager.js"></script>
     
     <!-- 主游戏类 -->
     <script src="game/Game.js"></script>

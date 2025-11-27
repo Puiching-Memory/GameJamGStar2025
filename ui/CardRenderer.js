@@ -3,8 +3,8 @@
  * 负责渲染卡牌元素
  */
 class CardRenderer {
-    constructor(animationSystem) {
-        this.animationSystem = animationSystem;
+    constructor(domProtectionManager) {
+        this.domProtectionManager = domProtectionManager;
     }
 
     /**
@@ -84,7 +84,7 @@ class CardRenderer {
     renderHand(handEl, hand, player, options = {}) {
         // 检查是否有受保护的卡牌元素（正在动画中）
         const protectedCards = Array.from(handEl.children).filter(
-            el => this.animationSystem && this.animationSystem.isProtected(el)
+            el => this.domProtectionManager && this.domProtectionManager.isProtected(el)
         );
 
         // 如果所有卡牌都受保护，跳过更新
@@ -94,7 +94,7 @@ class CardRenderer {
 
         // 移除未受保护的卡牌
         Array.from(handEl.children).forEach(el => {
-            if (!this.animationSystem || !this.animationSystem.isProtected(el)) {
+            if (!this.domProtectionManager || !this.domProtectionManager.isProtected(el)) {
                 el.remove();
             }
         });

@@ -1,11 +1,13 @@
 /**
- * 手牌动画管理器
- * 负责管理手牌相关的动画效果
+ * 动画管理器
+ * 负责管理所有动画效果，包括手牌动画和屏幕特效
+ * 合并了 HandAnimationManager 和 ScreenEffectManager 的功能
  */
-class HandAnimationManager {
-    constructor(animationSystem, elements) {
-        this.animationSystem = animationSystem;
+class AnimationManager {
+    constructor(domProtectionManager, elements) {
+        this.domProtectionManager = domProtectionManager;
         this.elements = elements;
+        this.screenDamageFlashEl = elements.screenDamageFlash;
     }
 
     /**
@@ -21,7 +23,7 @@ class HandAnimationManager {
                     ? this.elements.playerHandEl
                     : this.elements.opponentHandEl;
 
-                if (!handEl || !this.animationSystem) {
+                if (!handEl || !this.domProtectionManager) {
                     resolve();
                     return;
                 }
@@ -48,7 +50,7 @@ class HandAnimationManager {
                 handEl.insertBefore(placeholder, handCardEl);
 
                 // 保护元素，避免在渲染时被立即移除
-                this.animationSystem.protectElement(handCardEl);
+                this.domProtectionManager.protectElement(handCardEl);
 
                 // 记录当前屏幕位置，并将元素从手牌布局中抽离出来，锁定在当前视觉位置
                 const rect = handCardEl.getBoundingClientRect();
@@ -73,8 +75,8 @@ class HandAnimationManager {
                     'animationend',
                     () => {
                         handCardEl.classList.remove('card-exit');
-                        if (this.animationSystem) {
-                            this.animationSystem.unprotectElement(handCardEl);
+                        if (this.domProtectionManager) {
+                            this.domProtectionManager.unprotectElement(handCardEl);
                         }
                         if (handCardEl.parentNode) {
                             handCardEl.remove();
@@ -153,6 +155,58 @@ class HandAnimationManager {
         requestAnimationFrame(() => {
             handEl.style.width = `${targetWidth}px`;
         });
+    }
+
+    /**
+     * 触发屏幕红色闪烁动画
+     */
+    triggerDamageFlash() {
+        if (!this.screenDamageFlashEl) return;
+
+        // 移除之前的动画类（如果存在）
+        this.screenDamageFlashEl.classList.remove('screen-flash-red');
+        
+        // 强制重排以重置动画
+        // eslint-disable-next-line no-unused-expressions
+        this.screenDamageFlashEl.offsetWidth;
+        
+        // 添加动画类
+        this.screenDamageFlashEl.classList.add('screen-flash-red');
+        
+        // 动画结束后移除类，以便下次可以再次触发
+        this.screenDamageFlashEl.addEventListener(
+            'animationend',
+            () => {
+                this.screenDamageFlashEl.classList.remove('screen-flash-red');
+            },
+            { once: true }
+        );
+    }
+
+    /**
+     * 触发屏幕绿色闪烁动画（治疗效果）
+     */
+    triggerHealFlash() {
+        if (!this.screenDamageFlashEl) return;
+
+        // 移除之前的动画类（如果存在）
+        this.screenDamageFlashEl.classList.remove('screen-flash-green');
+        
+        // 强制重排以重置动画
+        // eslint-disable-next-line no-unused-expressions
+        this.screenDamageFlashEl.offsetWidth;
+        
+        // 添加动画类
+        this.screenDamageFlashEl.classList.add('screen-flash-green');
+        
+        // 动画结束后移除类，以便下次可以再次触发
+        this.screenDamageFlashEl.addEventListener(
+            'animationend',
+            () => {
+                this.screenDamageFlashEl.classList.remove('screen-flash-green');
+            },
+            { once: true }
+        );
     }
 }
 

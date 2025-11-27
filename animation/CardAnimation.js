@@ -3,8 +3,7 @@
  * 负责管理卡牌相关的动画
  */
 class CardAnimation {
-    constructor(animationSystem, dropZone, playedCardsContainer, dropZoneHint) {
-        this.animationSystem = animationSystem;
+    constructor(dropZone, playedCardsContainer, dropZoneHint) {
         this.dropZone = dropZone;
         this.playedCardsContainer = playedCardsContainer;
         this.dropZoneHint = dropZoneHint;

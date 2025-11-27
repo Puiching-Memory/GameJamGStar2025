@@ -25,11 +25,11 @@ class Game {
         this.ai = new AI(this.gameState, this.cardFactory);
 
         // UI模块
-        this.animationSystem = new AnimationSystem();
+        this.domProtectionManager = new DOMProtectionManager();
         this.logSystem = null; // 稍后初始化
-        this.cardRenderer = new CardRenderer(this.animationSystem);
-        this.displayManager = null; // 稍后初始化
+        this.cardRenderer = new CardRenderer(this.domProtectionManager);
         this.cardAnimation = null; // 稍后初始化
+        this.uiComponents = null; // 稍后初始化
 
         // 交互模块
         this.dragDrop = null; // 稍后初始化
@@ -82,12 +82,6 @@ class Game {
             gitGraphModal: document.getElementById('gitgraph-modal'),
             gitGraphModalCloseBtn: document.getElementById('gitgraph-modal-close-btn'),
             gitGraphContainer: document.getElementById('gitgraph-container'),
-            showConsoleBtn: document.getElementById('show-console-btn'),
-            consoleModal: document.getElementById('console-modal'),
-            consoleModalCloseBtn: document.getElementById('console-modal-close-btn'),
-            consoleContainer: document.getElementById('console-container'),
-            consoleClearBtn: document.getElementById('console-clear-btn'),
-            consoleAutoScrollBtn: document.getElementById('console-auto-scroll-btn'),
             gitGraphBackground: document.getElementById('gitgraph-background')
         };
         
@@ -130,18 +124,17 @@ class Game {
         // Buff渲染器
         const buffRenderer = new BuffRenderer();
 
-        // 显示管理器
-        this.displayManager = new DisplayManager(this.elements, {
+        // UI组件引用（用于UI管理器）
+        this.uiComponents = {
             playerHealthBar,
             opponentHealthBar,
             playerManaDisplay,
             opponentManaDisplay,
             buffRenderer
-        });
+        };
 
         // 卡牌动画
         this.cardAnimation = new CardAnimation(
-            this.animationSystem,
             this.elements.dropZone,
             this.elements.playedCardsContainer,
             this.elements.dropZoneHint
@@ -167,17 +160,13 @@ class Game {
      * 初始化管理器（组合模式）
      */
     initializeManagers() {
-        // 手牌动画管理器
-        this.handAnimationManager = new HandAnimationManager(
-            this.animationSystem,
+        // 动画管理器（合并了手牌动画和屏幕特效）
+        this.animationManager = new AnimationManager(
+            this.domProtectionManager,
             this.elements
         );
 
-        // 屏幕特效管理器
-        this.screenEffectManager = new ScreenEffectManager(this.elements.screenDamageFlash);
-
-        // 连击Buff处理器
-        this.comboBuffHandler = new ComboBuffHandler(this.gameState, this.logSystem);
+        // 连击Buff处理已合并到 CardEffect
 
         // 卡牌打出管理器
         this.cardPlayManager = new CardPlayManager(
@@ -186,7 +175,7 @@ class Game {
             this.cardAnimation,
             this.cardRenderer,
             this.logSystem,
-            this.handAnimationManager
+            this.animationManager
         );
 
         // UI管理器
@@ -194,9 +183,9 @@ class Game {
             this.gameState,
             this.elements,
             {
-                displayManager: this.displayManager,
+                ...this.uiComponents,
                 cardRenderer: this.cardRenderer,
-                handAnimationManager: this.handAnimationManager
+                handAnimationManager: this.animationManager
             }
         );
         this.uiManager.initializeTooltips();
@@ -204,12 +193,7 @@ class Game {
         // GitGraph 生成器
         this.gitGraphGenerator = new GitGraphGenerator(this.gameState);
 
-        // Console 管理器
-        this.consoleManager = new ConsoleManager(this.elements, this.logSystem);
-        // 设置日志系统的回调，将日志输出到 Console
-        this.logSystem.consoleCallback = (message, source, options) => {
-            this.consoleManager.addLog(message, source, options);
-        };
+        // Console 管理器已删除，日志通过 LogSystem 的 consoleCallback 直接输出
 
         // GitGraph 管理器
         this.gitGraphManager = new GitGraphManager(
@@ -229,36 +213,15 @@ class Game {
                 cardPlayManager: this.cardPlayManager,
                 cardAnimation: this.cardAnimation,
                 logSystem: this.logSystem,
-                displayManager: this.displayManager,
+                uiManager: this.uiManager,
                 cardRenderer: this.cardRenderer,
                 elements: this.elements,
                 getCardPlayOptions: () => this.getCardPlayOptions()
             }
         );
 
-        // 游戏事件管理器
-        this.eventManager = new GameEventManager(this.gameState, {
-            onCardDrawn: (data) => {
-                this.uiManager.markNewCard(data.player, data.card.id);
-            },
-            onCardPlayed: (data) => {
-                this.comboBuffHandler.processComboBuff(data.player);
-            },
-            onPlayerDamage: () => {
-                this.screenEffectManager.triggerDamageFlash();
-            },
-            onPlayerHeal: () => {
-                this.screenEffectManager.triggerHealFlash();
-            },
-            onCardRemoved: (data) => {
-                const player = data.player === 'player' ? 'player' : 'opponent';
-                this.cardPlayManager.addForcedDiscardCardToPile(
-                    data.card,
-                    player,
-                    this.elements.playedCardsContainer
-                );
-            }
-        });
+        // 设置游戏事件监听器
+        this.setupGameEventListeners();
 
         // 监听 GitGraph 更新事件
         this.gameState.eventSystem.on('gitgraph:update', () => {
@@ -267,13 +230,13 @@ class Game {
 
         // 监听玩家添加事件，立即更新显示
         this.gameState.eventSystem.on('player:added', (data) => {
-            if (this.displayManager && this.displayManager.multiPlayerDisplay) {
+            if (this.uiManager && this.uiManager.multiPlayerDisplay) {
                 // 找到新添加的玩家
                 const player = this.gameState.players.find(p => p.name === data.playerId || p.name === data.name);
                 if (player) {
-                    this.displayManager.multiPlayerDisplay.addPlayer(player, this.gameState);
+                    this.uiManager.multiPlayerDisplay.addPlayer(player, this.gameState);
                     // 更新所有显示
-                    this.displayManager.update(this.gameState);
+                    this.uiManager.update(this.gameState);
                 }
             }
             // 更新卡牌显示（自动机器人添加后，相关卡牌会被禁用）
@@ -302,15 +265,60 @@ class Game {
 
         // 监听玩家移除事件，更新显示
         this.gameState.eventSystem.on('player:removed', (data) => {
-            if (this.displayManager && this.displayManager.multiPlayerDisplay) {
+            if (this.uiManager && this.uiManager.multiPlayerDisplay) {
                 // 移除玩家状态栏
-                this.displayManager.multiPlayerDisplay.removePlayer(data.playerId);
+                this.uiManager.multiPlayerDisplay.removePlayer(data.playerId);
             }
             // 更新卡牌显示（重新启用相关卡牌）
             this.updateDisplay();
         });
     }
 
+
+    /**
+     * 设置游戏事件监听器
+     */
+    setupGameEventListeners() {
+        if (!this.gameState || !this.gameState.eventSystem) {
+            return;
+        }
+
+        // 监听抽牌事件，用于触发手牌动画
+        this.gameState.eventSystem.on('card:drawn', (data) => {
+            this.uiManager.markNewCard(data.player, data.card.id);
+        });
+
+        // 监听卡牌使用事件，用于触发连击buff
+        this.gameState.eventSystem.on('card:played', (data) => {
+            this.cardEffect.processComboBuff(data.player);
+        });
+
+        // 监听玩家扣血事件，用于触发屏幕红色闪烁
+        this.gameState.eventSystem.on('player:damage', (data) => {
+            if (data.player === 'player' && data.damage > 0) {
+                this.animationManager.triggerDamageFlash();
+            }
+        });
+
+        // 监听玩家治疗事件，用于触发屏幕绿色闪烁
+        this.gameState.eventSystem.on('player:heal', (data) => {
+            if (data.player === 'player' && data.heal > 0) {
+                this.animationManager.triggerHealFlash();
+            }
+        });
+
+        // 监听卡牌移除事件，将被强制拆下的卡牌也放到牌堆中
+        this.gameState.eventSystem.on('card:removed', (data) => {
+            if (data.isForcedDiscard && data.card) {
+                const player = data.player === 'player' ? 'player' : 'opponent';
+                this.cardPlayManager.addForcedDiscardCardToPile(
+                    data.card,
+                    player,
+                    this.elements.playedCardsContainer
+                );
+            }
+        });
+    }
 
     /**
      * 设置事件监听器
@@ -354,31 +362,6 @@ class Game {
         }
 
 
-        if (this.elements.showConsoleBtn) {
-            this.elements.showConsoleBtn.addEventListener('click', () => {
-                this.consoleManager.show();
-            });
-        }
-
-        if (this.elements.consoleModalCloseBtn) {
-            this.elements.consoleModalCloseBtn.addEventListener('click', () => {
-                if (this.elements.consoleModal) {
-                    this.elements.consoleModal.style.display = 'none';
-                }
-            });
-        }
-
-        if (this.elements.consoleClearBtn) {
-            this.elements.consoleClearBtn.addEventListener('click', () => {
-                this.consoleManager.clear();
-            });
-        }
-
-        if (this.elements.consoleAutoScrollBtn) {
-            this.elements.consoleAutoScrollBtn.addEventListener('click', () => {
-                this.consoleManager.toggleAutoScroll();
-            });
-        }
 
         // GitGraph 显示按钮
         if (this.elements.showGitGraphBtn) {
