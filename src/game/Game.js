@@ -84,6 +84,9 @@ export class Game {
         // 初始化音效系统
         await this.audioSystem.initialize();
         
+        // 将音频系统传递给AI解说员（用于TTS播放）
+        this.commentator.setAudioSystem(this.audioSystem);
+        
         // 记录游戏开始事件
         this.commentator.recordEvent('game_start', {});
     }
@@ -495,7 +498,7 @@ export class Game {
     animateOpponentHandResize(handEl, oldWidth) {
         if (!handEl) return;
 
-        // 根据卡牌数量粗略估算一个视觉上"合理"的宽度，而不是直接用 scrollWidth
+        // 根据卡牌数量粗略估算一个视觉上“合理”的宽度，而不是直接用 scrollWidth
         const cardEls = handEl.querySelectorAll('.card');
         const cardCount = cardEls.length;
 
@@ -515,12 +518,6 @@ export class Game {
             }
         }
 
-        // 限制最大宽度，避免超出视窗导致滚动条
-        const maxWidth = Math.min(window.innerWidth - 20, 600); // 留出边距，最大600px
-        if (targetWidth > maxWidth) {
-            targetWidth = maxWidth;
-        }
-
         if (!oldWidth || !targetWidth || Math.abs(targetWidth - oldWidth) < 1) {
             // 如果没有旧宽度或变化很小，就直接同步为目标宽度
             if (targetWidth) {
@@ -529,15 +526,12 @@ export class Game {
             return;
         }
 
-        // 先把当前宽度锁定在旧值，确保过渡平滑
+        // 先把当前宽度锁定在旧值
         handEl.style.width = `${oldWidth}px`;
 
-        // 使用双requestAnimationFrame确保样式已应用，然后立即切换到目标宽度
-        // 由于CSS transition已经设置为0.1s，动画会很快完成
+        // 下一帧再切换到目标宽度，由 CSS 的 transition: width 控制过渡
         requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-                handEl.style.width = `${targetWidth}px`;
-            });
+            handEl.style.width = `${targetWidth}px`;
         });
     }
 
@@ -910,12 +904,15 @@ export class Game {
      * 生成AI解说
      */
     async generateCommentary() {
+        if (!this.commentator.config.enabled || !this.logSystem) {
+            return;
+        }
+
         try {
             const commentary = await this.commentator.generateCommentary(this.gameState);
             if (commentary) {
-                // 可以选择将解说添加到日志系统或单独显示
-                // this.logSystem.addLog(commentary, 'commentator');
-                console.log('AI解说:', commentary);
+                // 将AI解说添加到弹幕系统
+                this.logSystem.addLog(commentary, 'commentator');
             }
         } catch (error) {
             console.warn('Failed to generate commentary:', error);
@@ -1068,5 +1065,4 @@ export class Game {
         this.audioSystem.play(SoundEffects.BUTTON_CLICK);
     }
 }
-
 

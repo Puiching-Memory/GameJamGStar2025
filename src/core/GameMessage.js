@@ -20,7 +20,8 @@ export class GameMessage {
             'player': '👤',
             'opponent': '🤖',
             'system': '⚙️',
-            'game': '🎮'
+            'game': '🎮',
+            'commentator': '🎙️'
         };
         return icons[this.source] || '📢';
     }
@@ -33,7 +34,8 @@ export class GameMessage {
             'player': '#4facfe', // 蓝色
             'opponent': '#f5576c', // 红色
             'system': '#667eea', // 紫色
-            'game': '#fbbf24' // 金色
+            'game': '#fbbf24', // 金色
+            'commentator': '#8a2be2' // 紫色（AI解说）
         };
         return colors[this.source] || '#ffffff';
     }

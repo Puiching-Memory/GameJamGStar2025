@@ -16,7 +16,7 @@ Git竞技场是一款创新的卡牌对战游戏，将开发者熟悉的Git操�
   - ⭐ **特殊型**：复合效果（Rebase、Reset、Branch、Stash、Cherry Pick、Fetch等）
 - **现代化UI**：渐变背景、流畅动画、响应式设计
 - **智能AI对手**：与AI对手进行对战
-- **AI游戏解说员**：使用OpenAI生成生动的游戏解说（可选）
+- **AI游戏解说员**：使用Qwen（通义千问）生成生动的游戏解说（可选）
 - **音效系统**：支持本地音频文件播放，增强游戏体验
 
 ## 🚀 快速开始
@@ -85,7 +85,7 @@ npm run build
 - **构建工具**：Vite 5.0
 - **JavaScript**：ES13 (ES2022)
 - **模块系统**：ES Modules
-- **AI集成**：OpenAI Node.js SDK
+- **AI集成**：Qwen（通义千问）API（兼容OpenAI SDK）
 - **HTML5/CSS3**：现代化UI设计
 
 ## 📝 项目结构
@@ -151,14 +151,26 @@ GameJamGStar2025/
 
 ### AI解说员系统（可选）
 
-AI解说员系统使用OpenAI API生成游戏解说。要启用此功能：
+AI解说员系统使用Qwen（通义千问）API生成游戏解说，并支持文本转语音（TTS）功能。要启用此功能：
 
 1. 在项目根目录创建 `.env` 文件
 2. 添加以下内容：
    ```
-   VITE_OPENAI_API_KEY=your_api_key_here
+   VITE_DASHSCOPE_API_KEY=your_api_key_here
    ```
-3. 如果没有配置API Key，AI解说员系统会自动禁用
+   获取API Key：https://help.aliyun.com/zh/model-studio/get-api-key
+   
+   **注意**：同一个API Key既用于生成AI解说，也用于文本转语音，无需额外配置。
+3. （可选）如果使用新加坡地域的模型，可以设置：
+   ```
+   VITE_DASHSCOPE_BASE_URL=https://dashscope-intl.aliyuncs.com/compatible-mode/v1
+   ```
+4. 如果没有配置API Key，AI解说员系统会自动禁用
+5. 配置API Key后，AI解说会：
+   - 以文本形式显示在游戏弹幕中
+   - 自动转换为语音并播放（使用qwen3-tts-flash模型）
+   
+参考文档：https://bailian.console.aliyun.com
 
 ### 音效系统
 

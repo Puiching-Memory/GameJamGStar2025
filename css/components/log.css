@@ -64,10 +64,17 @@
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.7), 0 0 20px rgba(88, 166, 255, 0.6);
 }
 
-/* 游戏消息 - 金色 + 轻微绿色，突出“重要提示” */
+/* 游戏消息 - 金色 + 轻微绿色，突出"重要提示" */
 .danmaku-item.danmaku-game {
     background: linear-gradient(135deg, rgba(251, 191, 36, 0.96) 0%, rgba(245, 158, 11, 0.96) 60%, rgba(63, 185, 80, 0.98) 100%);
     border-color: rgba(251, 191, 36, 0.9);
     box-shadow: 0 4px 22px rgba(0, 0, 0, 0.75), 0 0 24px rgba(251, 191, 36, 0.7);
+}
+
+/* AI解说消息 - 紫色系，突出AI特色 */
+.danmaku-item.danmaku-commentator {
+    background: linear-gradient(135deg, rgba(138, 43, 226, 0.96) 0%, rgba(75, 0, 130, 0.98) 100%);
+    border-color: rgba(138, 43, 226, 0.9);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.7), 0 0 20px rgba(138, 43, 226, 0.6);
 }
 
