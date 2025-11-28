@@ -19,7 +19,7 @@
     transition: all 0.3s ease;
     position: relative;
     min-height: 300px;
-    overflow: visible;
+    overflow: hidden;
 }
 
 .drop-zone-hint {

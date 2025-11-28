@@ -22,6 +22,7 @@
     <link rel="stylesheet" href="css/components/modal.css">
     <link rel="stylesheet" href="css/components/log.css">
     <link rel="stylesheet" href="css/components/tooltip.css">
+    <link rel="stylesheet" href="css/components/git-graph.css">
     
     <!-- 动画样式 -->
     <link rel="stylesheet" href="css/animations/keyframes.css">
@@ -88,6 +89,8 @@
             <!-- 中央：拖拽区域（独占中间，左右顶满） -->
             <div class="center-panel">
                 <div class="drop-zone" id="drop-zone">
+                    <!-- Git Graph背景层 -->
+                    <div class="git-graph-background" id="git-graph-container"></div>
                     <div class="drop-zone-hint" id="drop-zone-hint">⬇️ 拖拽卡牌到这里使用 ⬇️</div>
                     <div class="played-cards-container" id="played-cards-container"></div>
                 </div>
@@ -100,7 +103,6 @@
 
             <!-- 右侧：空区域（保持对称） -->
             <div class="right-panel">
-                <!-- 可以放一些额外的信息或保持空白 -->
             </div>
         </div>
 
@@ -138,6 +140,7 @@
     <script src="core/GameMessage.js"></script>
     <script src="core/GameMessageLog.js"></script>
     <script src="core/GameState.js"></script>
+    <script src="core/GitHistory.js"></script>
     
     <!-- 数据模块 -->
     <script src="data/CardData.js"></script>
@@ -156,6 +159,7 @@
     <script src="ui/CardRenderer.js"></script>
     <script src="ui/DisplayManager.js"></script>
     <script src="ui/Tooltip.js"></script>
+    <script src="ui/GitGraphRenderer.js"></script>
     
     <!-- 交互模块 -->
     <script src="interaction/DragDrop.js"></script>

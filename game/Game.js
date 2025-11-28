@@ -20,6 +20,10 @@ class Game {
         this.displayManager = null; // 稍后初始化
         this.cardAnimation = null; // 稍后初始化
 
+        // Git历史记录模块
+        this.gitHistory = new GitHistory();
+        this.gitGraphRenderer = null; // 稍后初始化
+
         // 交互模块
         this.dragDrop = null; // 稍后初始化
         this.tooltip = null; // Tooltip系统
@@ -76,7 +80,8 @@ class Game {
             opponentHeaderInfo: document.querySelector('.opponent-header-info'),
             turnNumberEl: document.getElementById('turn-number'),
             playerBuffsEl: document.getElementById('player-buffs'),
-            opponentBuffsEl: document.getElementById('opponent-buffs')
+            opponentBuffsEl: document.getElementById('opponent-buffs'),
+            gitGraphContainer: document.getElementById('git-graph-container')
         };
     }
 
@@ -137,6 +142,11 @@ class Game {
                 }
             }
         });
+
+        // Git Graph渲染器
+        if (this.elements.gitGraphContainer) {
+            this.gitGraphRenderer = new GitGraphRenderer(this.elements.gitGraphContainer);
+        }
     }
 
     /**
@@ -271,6 +281,7 @@ class Game {
      */
     startGame() {
         this.gameState.reset();
+        this.gitHistory.reset();
         this.gameState.gameStarted = true;
 
         // 关闭游戏结束对话框（如果打开）
@@ -309,8 +320,22 @@ class Game {
         this.updateTurnNumber();
 
         this.updateDisplay();
+        this.updateGitGraph();
         this.logSystem.addLog('游戏开始！', 'game');
         this.logSystem.addLog('你的回合！', 'player');
+    }
+
+    /**
+     * 更新Git Graph显示
+     */
+    updateGitGraph() {
+        if (this.gitGraphRenderer) {
+            const mermaidCode = this.gitHistory.generateMermaidGraph();
+            console.log('Updating git graph with code:', mermaidCode);
+            this.gitGraphRenderer.render(mermaidCode);
+        } else {
+            console.warn('GitGraphRenderer not initialized');
+        }
     }
 
     /**
@@ -481,6 +506,10 @@ class Game {
             return;
         }
 
+        // 记录git操作
+        this.gitHistory.recordCardPlay(card, 'player', this.gameState.turnNumber);
+        this.updateGitGraph();
+
         // 消耗能量
         this.gameState.player.consumeMana(card.cost);
 
@@ -629,6 +658,10 @@ class Game {
         if (cardIndex !== -1) {
             // 在状态更新前，为对手手牌添加退出动画，并在动画结束后再更新对手手牌排列
             const exitPromise = this.playHandCardExitAnimation('opponent', card.id);
+
+            // 记录git操作
+            this.gitHistory.recordCardPlay(card, 'opponent', this.gameState.turnNumber);
+            this.updateGitGraph();
 
             // 消耗能量
             this.gameState.opponent.consumeMana(card.cost);

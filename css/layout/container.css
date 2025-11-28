@@ -10,5 +10,7 @@
     flex-direction: column;
     overflow-x: hidden;
     overflow-y: visible;
+    position: relative;
+    z-index: 1;
 }
 
