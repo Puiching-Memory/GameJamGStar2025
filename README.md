@@ -8,41 +8,67 @@ Git竞技场是一款创新的卡牌对战游戏，将开发者熟悉的Git操�
 
 ## 🎯 游戏特色
 
-- **12种Git操作卡牌**：Commit、Push、Pull、Merge、Rebase、Reset、Branch、Stash、Cherry Pick、Revert、Fetch、Clone
+- **30+种Git操作卡牌**：涵盖所有Git原子操作，包括Add、Commit、Push、Pull、Merge、Rebase等
 - **回合制对战**：策略性地使用卡牌，管理能量资源
 - **多样化卡牌类型**：
   - 🗡️ **攻击型**：造成伤害（Commit、Push、Merge、Clone等）
   - 💚 **治疗型**：恢复生命值（Pull、Revert）
-  - ⭐ **特殊型**：复合效果（Rebase、Reset、Branch、Stash、Cherry Pick、Fetch）
+  - ⭐ **特殊型**：复合效果（Rebase、Reset、Branch、Stash、Cherry Pick、Fetch等）
 - **现代化UI**：渐变背景、流畅动画、响应式设计
 - **智能AI对手**：与AI对手进行对战
+- **AI游戏解说员**：使用OpenAI生成生动的游戏解说（可选）
+- **音效系统**：支持本地音频文件播放，增强游戏体验
 
 ## 🚀 快速开始
 
+### 前置要求
+
+- Node.js 16+ 和 npm
+
+### 安装和运行
+
 1. 克隆或下载此仓库
-2. 直接在浏览器中打开 `index.html` 文件
-3. 点击"开始游戏"按钮
-4. 享受游戏！
+2. 安装依赖：
+   ```bash
+   npm install
+   ```
+3. 启动开发服务器：
+   ```bash
+   npm run dev
+   ```
+4. 在浏览器中打开显示的地址（通常是 http://localhost:3000）
+5. 点击"开始游戏"按钮，享受游戏！
+
+### 构建生产版本
+
+```bash
+npm run build
+```
+
+构建后的文件将在 `dist/` 目录中。
 
 ## 📋 卡牌说明
 
 ### 攻击型卡牌
-- **Commit** (💾) - 消耗1能量，造成10点伤害
-- **Push** (⬆️) - 消耗2能量，造成20点伤害
-- **Merge** (🔀) - 消耗3能量，造成30点伤害
-- **Clone** (📋) - 消耗4能量，造成35点巨大伤害
+- **Add** (➕) - 消耗1能量，造成4点伤害
+- **Commit** (💾) - 消耗1能量，造成5点伤害
+- **Push** (⬆️) - 消耗2能量，造成10点伤害
+- **Merge** (🔀) - 消耗3能量，造成15点伤害
+- **Clone** (📋) - 消耗4能量，造成18点巨大伤害
 
 ### 治疗型卡牌
-- **Pull** (⬇️) - 消耗2能量，恢复15点生命值
-- **Revert** (↩️) - 消耗3能量，恢复25点生命值
+- **Pull** (⬇️) - 消耗2能量，恢复8点生命值
+- **Revert** (↩️) - 消耗3能量，恢复12点生命值
 
 ### 特殊型卡牌
-- **Rebase** (🔄) - 消耗3能量，造成25点伤害并抽一张牌
+- **Rebase** (🔄) - 消耗3能量，造成12点伤害并抽一张牌
 - **Reset** (⏪) - 消耗2能量，移除对手一张手牌
 - **Branch** (🌿) - 消耗1能量，抽两张牌
 - **Stash** (📦) - 消耗1能量，抽一张牌
-- **Cherry Pick** (🍒) - 消耗2能量，造成15点伤害并抽一张牌
+- **Cherry Pick** (🍒) - 消耗2能量，造成8点伤害并抽一张牌
 - **Fetch** (📥) - 消耗1能量，抽一张牌
+
+更多卡牌请参考游戏内说明。
 
 ## 🎯 游戏规则
 
@@ -56,64 +82,116 @@ Git竞技场是一款创新的卡牌对战游戏，将开发者熟悉的Git操�
 
 ## 🛠️ 技术栈
 
-- HTML5
-- CSS3 (渐变、动画、响应式设计)
-- 原生JavaScript (ES6+)
+- **构建工具**：Vite 5.0
+- **JavaScript**：ES13 (ES2022)
+- **模块系统**：ES Modules
+- **AI集成**：OpenAI Node.js SDK
+- **HTML5/CSS3**：现代化UI设计
 
-## 📝 文件结构
+## 📝 项目结构
 
 ```
 GameJamGStar2025/
-├── index.html              # 主页面
-├── css/                    # CSS样式模块（组合式设计）
-│   ├── base/              # 基础样式
-│   ├── layout/            # 布局样式
-│   ├── components/        # 组件样式
-│   ├── animations/        # 动画定义
-│   └── responsive/        # 响应式设计
-├── core/                   # 核心数据模型
-│   ├── Card.js            # 卡牌类
-│   ├── Player.js          # 玩家类
-│   └── GameState.js       # 游戏状态
-├── data/                   # 数据层
-│   ├── CardData.js        # 卡牌数据
-│   └── CardFactory.js     # 卡牌工厂
-├── gameplay/               # 游戏逻辑
-│   ├── CardEffect.js      # 卡牌效果
-│   ├── TurnManager.js     # 回合管理
-│   └── AI.js              # AI逻辑
-├── ui/                     # UI组件
-│   ├── CardRenderer.js    # 卡牌渲染
-│   ├── DisplayManager.js  # 显示管理
-│   ├── HealthBar.js       # 血量条
-│   ├── ManaDisplay.js     # 能量显示
-│   └── LogSystem.js       # 日志系统
-├── animation/              # 动画系统
-│   ├── AnimationSystem.js  # 动画框架
-│   └── CardAnimation.js   # 卡牌动画
-├── interaction/            # 交互系统
-│   └── DragDrop.js        # 拖拽交互
-├── game/                   # 游戏主类
-│   └── Game.js            # 游戏核心逻辑
-└── README.md               # 说明文档
+├── package.json              # npm配置和依赖
+├── vite.config.js            # Vite构建配置
+├── index.html                # 主页面（Vite入口）
+├── src/                      # 源代码目录
+│   ├── main.js              # 应用入口文件
+│   ├── core/                # 核心数据模型
+│   │   ├── Player.js        # 玩家类
+│   │   ├── Card.js          # 卡牌类
+│   │   ├── Buff.js          # Buff类
+│   │   ├── GameState.js     # 游戏状态
+│   │   ├── GameMessage.js   # 游戏消息
+│   │   ├── GameMessageLog.js # 消息日志
+│   │   └── GitHistory.js   # Git历史记录
+│   ├── data/                # 数据层
+│   │   ├── CardData.js      # 卡牌数据定义
+│   │   └── CardFactory.js   # 卡牌工厂
+│   ├── gameplay/            # 游戏逻辑
+│   │   ├── CardEffect.js    # 卡牌效果
+│   │   ├── TurnManager.js   # 回合管理
+│   │   └── AI.js            # AI逻辑
+│   ├── ui/                   # UI组件
+│   │   ├── CardRenderer.js  # 卡牌渲染
+│   │   ├── DisplayManager.js # 显示管理
+│   │   ├── HealthBar.js     # 血量条
+│   │   ├── ManaDisplay.js   # 能量显示
+│   │   ├── BuffRenderer.js  # Buff渲染
+│   │   ├── LogSystem.js     # 日志系统
+│   │   ├── Tooltip.js       # 提示系统
+│   │   └── GitGraphRenderer.js # Git图表渲染
+│   ├── animation/           # 动画系统
+│   │   ├── AnimationSystem.js # 动画框架
+│   │   └── CardAnimation.js # 卡牌动画
+│   ├── interaction/         # 交互系统
+│   │   └── DragDrop.js      # 拖拽交互
+│   ├── game/                # 游戏主类
+│   │   └── Game.js          # 游戏核心逻辑（组合模式）
+│   └── systems/             # 系统模块
+│       ├── commentator/     # AI解说员系统
+│       │   ├── CommentatorSystem.js # 解说员主类
+│       │   ├── CommentatorConfig.js  # 配置管理
+│       │   └── CommentatorEvents.js  # 事件处理
+│       └── audio/           # 音效系统
+│           ├── AudioSystem.js    # 音效系统主类
+│           ├── AudioManager.js   # 音频资源管理
+│           └── SoundEffects.js   # 音效定义
+├── assets/                   # 资源文件
+│   └── audio/               # 音效文件目录
+└── css/                      # CSS样式模块
+    ├── base/                # 基础样式
+    ├── layout/              # 布局样式
+    ├── components/          # 组件样式
+    ├── animations/          # 动画定义
+    └── responsive/          # 响应式设计
 ```
 
-## 🎨 游戏截图
+## ⚙️ 配置
 
-游戏采用现代化的渐变设计，包含：
-- 紫色渐变背景
-- 流畅的卡牌动画效果
-- 实时战斗日志
-- 生命值和能量显示
+### AI解说员系统（可选）
+
+AI解说员系统使用OpenAI API生成游戏解说。要启用此功能：
+
+1. 在项目根目录创建 `.env` 文件
+2. 添加以下内容：
+   ```
+   VITE_OPENAI_API_KEY=your_api_key_here
+   ```
+3. 如果没有配置API Key，AI解说员系统会自动禁用
+
+### 音效系统
+
+音效系统支持本地音频文件播放。要添加音效：
+
+1. 将音频文件（.mp3格式）放入 `assets/audio/` 目录
+2. 在 `src/systems/audio/SoundEffects.js` 中定义音效ID和文件路径映射
+3. 音效会在相应的游戏事件中自动播放
+
+## 🎨 设计理念
+
+本项目采用**组合模式**设计，所有系统通过组合的方式整合到主游戏类中：
+
+- **核心模块**：管理游戏状态和数据
+- **游戏逻辑模块**：处理游戏规则和AI
+- **UI模块**：负责界面渲染和交互
+- **动画模块**：处理视觉效果
+- **系统模块**：AI解说员和音效等扩展功能
+
+各模块之间通过接口通信，保持低耦合，便于维护和扩展。
 
 ## 🔮 未来计划
 
+- [x] 使用npm管理项目依赖
+- [x] 升级到ES13模块系统
+- [x] 集成AI游戏解说员系统
+- [x] 添加音效系统
 - [ ] 添加更多Git操作卡牌
 - [ ] 实现多人对战模式
 - [ ] 添加卡牌收集系统
 - [ ] 增加成就系统
 - [ ] 优化AI难度等级
-- [ ] 添加音效和背景音乐
+- [ ] 添加背景音乐
 
 ## 📄 许可证
 

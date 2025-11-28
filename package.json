@@ -1,0 +1,26 @@
+{
+  "name": "gamejam-gstar2025",
+  "version": "1.0.0",
+  "description": "基于Git操作的卡牌对战游戏",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "keywords": [
+    "game",
+    "card-game",
+    "git"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "openai": "^4.20.0",
+    "mermaid": "^10.6.0"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0"
+  }
+}
+

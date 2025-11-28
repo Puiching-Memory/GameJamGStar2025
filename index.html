@@ -133,51 +133,8 @@
         </div>
     </div>
 
-    <!-- 核心模块 -->
-    <script src="core/Player.js"></script>
-    <script src="core/Card.js"></script>
-    <script src="core/Buff.js"></script>
-    <script src="core/GameMessage.js"></script>
-    <script src="core/GameMessageLog.js"></script>
-    <script src="core/GameState.js"></script>
-    <script src="core/GitHistory.js"></script>
-    
-    <!-- 数据模块 -->
-    <script src="data/CardData.js"></script>
-    <script src="data/CardFactory.js"></script>
-    
-    <!-- 游戏逻辑模块 -->
-    <script src="gameplay/CardEffect.js"></script>
-    <script src="gameplay/TurnManager.js"></script>
-    <script src="gameplay/AI.js"></script>
-    
-    <!-- UI模块 -->
-    <script src="ui/LogSystem.js"></script>
-    <script src="ui/HealthBar.js"></script>
-    <script src="ui/ManaDisplay.js"></script>
-    <script src="ui/BuffRenderer.js"></script>
-    <script src="ui/CardRenderer.js"></script>
-    <script src="ui/DisplayManager.js"></script>
-    <script src="ui/Tooltip.js"></script>
-    <script src="ui/GitGraphRenderer.js"></script>
-    
-    <!-- 交互模块 -->
-    <script src="interaction/DragDrop.js"></script>
-    
-    <!-- 动画模块 -->
-    <script src="animation/AnimationSystem.js"></script>
-    <script src="animation/CardAnimation.js"></script>
-    
-    <!-- 主游戏类 -->
-    <script src="game/Game.js"></script>
-    
-    <!-- 初始化 -->
-    <script>
-        let game;
-        document.addEventListener('DOMContentLoaded', () => {
-            game = new Game();
-        });
-    </script>
+    <!-- Vite入口点 -->
+    <script type="module" src="/src/main.js"></script>
 </body>
 </html>
 
