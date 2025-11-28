@@ -560,16 +560,3 @@ class CallbackStep extends AnimationStep {
     }
 }
 
-// 导出
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = {
-        AnimationSystem,
-        AnimationStep,
-        FlyStep,
-        HideStep,
-        ShowStep,
-        DelayStep,
-        CallbackStep
-    };
-}
-
