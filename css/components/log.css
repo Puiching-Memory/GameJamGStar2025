@@ -18,6 +18,26 @@
     gap: 8px;
 }
 
+/* AI 解说 TTS 信息栏（左侧，完全复制弹幕系统） */
+.tts-danmaku-container {
+    position: fixed;
+    bottom: 220px;
+    left: 20px;
+    width: 300px;
+    max-width: 300px;
+    pointer-events: none;
+    z-index: 2000;
+    display: flex;
+    flex-direction: column-reverse;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+/* TTS 栏中的消息 - 无动画，持久显示 */
+.tts-danmaku-container .danmaku-item {
+    animation: none !important;
+}
+
 /* 弹幕条目 - 从下往上弹出 */
 .danmaku-item {
     position: relative;
@@ -76,5 +96,30 @@
     background: linear-gradient(135deg, rgba(138, 43, 226, 0.96) 0%, rgba(75, 0, 130, 0.98) 100%);
     border-color: rgba(138, 43, 226, 0.9);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.7), 0 0 20px rgba(138, 43, 226, 0.6);
+}
+
+/* 流式文本容器 */
+.danmaku-item .stream-text-container {
+    display: inline;
+}
+
+/* 流式字符 - 默认白色 */
+.danmaku-item .stream-char {
+    display: inline;
+    color: #fff;
+    transition: color 0.1s ease;
+}
+
+/* 流式字符 - 音频播放时高亮为蓝色 */
+.danmaku-item .stream-char.highlighted {
+    color: #4A9EFF;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+    font-weight: 900;
+}
+
+/* 解说员消息的流式字符高亮 - 适配紫色背景，无高光效果 */
+.danmaku-item.danmaku-commentator .stream-char.highlighted {
+    color: #E0B0FF; /* 浅紫色，适配背景的深紫色 */
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8); /* 只保留基本阴影，取消高光 */
 }
 

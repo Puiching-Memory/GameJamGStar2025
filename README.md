@@ -47,6 +47,47 @@ npm run build
 
 构建后的文件将在 `dist/` 目录中。
 
+### 使用 FastAPI 服务器部署
+
+项目包含一个基于 FastAPI 的服务器，可以同时托管游戏静态文件、提供 TTS 服务和 AI 解说文本生成：
+
+1. **安装 Python 依赖**：
+   ```bash
+   cd server
+   pip install -r requirements.txt
+   ```
+
+2. **配置环境变量**：
+   ```bash
+   cp env.example .env
+   # 编辑 .env 文件，填入 DASHSCOPE_API_KEY
+   ```
+
+3. **构建游戏**：
+   ```bash
+   npm run build
+   ```
+
+4. **启动服务器**：
+   ```bash
+   cd server
+   python run.py
+   ```
+
+   服务器将在 `http://localhost:18000` 启动
+
+5. **访问游戏**：
+   打开浏览器访问 `http://localhost:18000`
+
+**服务器功能**：
+- ✅ 托管游戏静态文件（dist 目录）
+- ✅ CosyVoice TTS 服务（`/api/tts`）
+- ✅ Qwen 文本生成服务（`/api/commentary`，用于 AI 解说）
+
+前端会自动优先使用后端服务，如果后端不可用会自动回退到直接调用 DashScope API。
+
+详细说明请参考 `server/README.md`
+
 ## 📋 卡牌说明
 
 ### 攻击型卡牌

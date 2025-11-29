@@ -16,7 +16,6 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "openai": "^4.20.0",
     "mermaid": "^10.6.0"
   },
   "devDependencies": {

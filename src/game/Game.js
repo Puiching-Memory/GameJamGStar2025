@@ -36,7 +36,8 @@ export class Game {
 
         // UI模块
         this.animationSystem = new AnimationSystem();
-        this.logSystem = null; // 稍后初始化
+        this.logSystem = null; // 稍后初始化（通用信息弹幕）
+        this.ttsLogSystem = null; // AI 解说 TTS 独立信息栏
         this.cardRenderer = new CardRenderer(this.animationSystem);
         this.displayManager = null; // 稍后初始化
         this.cardAnimation = null; // 稍后初始化
@@ -103,6 +104,7 @@ export class Game {
             playerHandEl: document.getElementById('player-hand'),
             opponentHandEl: document.getElementById('opponent-hand'),
             danmakuContainer: document.getElementById('danmaku-container'),
+            ttsDanmakuContainer: document.getElementById('tts-danmaku-container'),
             startBtn: document.getElementById('start-game-btn'),
             endTurnBtn: document.getElementById('end-turn-btn'),
             playerManaEl: document.getElementById('player-mana'),
@@ -131,9 +133,14 @@ export class Game {
      * 初始化组件
      */
     initializeComponents() {
-        // 日志系统
+        // 日志系统：通用信息弹幕（右侧）
         this.logSystem = new LogSystem(this.elements.danmakuContainer);
         this.cardEffect.logSystem = this.logSystem;
+
+        // AI 解说 TTS 信息栏（左侧，完全复制弹幕系统）
+        if (this.elements.ttsDanmakuContainer) {
+            this.ttsLogSystem = new LogSystem(this.elements.ttsDanmakuContainer);
+        }
 
         // 生命值条
         const playerHealthBar = new HealthBar(
@@ -553,6 +560,8 @@ export class Game {
         if (this.gameState.turn !== 'player' || !this.gameState.gameStarted) return;
         if (this.gameState.player.mana < card.cost) {
             this.logSystem.addLog('能量不足！', 'system');
+            // 播放错误音效
+            this.audioSystem.play(SoundEffects.ERROR);
             return;
         }
 
@@ -578,13 +587,32 @@ export class Game {
         // 从手牌移除（游戏状态）
         this.gameState.player.removeCard(card.id);
 
+        // 记录执行前的buff数量
+        const playerBuffsBefore = this.gameState.player.buffs.length;
+        const opponentBuffsBefore = this.gameState.opponent.buffs.length;
+        
         // 执行卡牌效果
         const target = this.cardEffect.determineTarget(card, 'player');
         this.cardEffect.execute(card, target, 'player');
         
+        // 检查是否有新的buff被添加
+        const playerBuffsAfter = this.gameState.player.buffs.length;
+        const opponentBuffsAfter = this.gameState.opponent.buffs.length;
+        if (playerBuffsAfter > playerBuffsBefore) {
+            this.audioSystem.play(SoundEffects.BUFF_APPLY);
+        }
+        if (opponentBuffsAfter > opponentBuffsBefore) {
+            this.audioSystem.play(SoundEffects.BUFF_APPLY);
+        }
+        
         // 根据卡牌类型播放音效
         if (card.power > 0) {
-            this.audioSystem.play(SoundEffects.DAMAGE);
+            // 高伤害时播放暴击音效
+            if (card.power >= 10) {
+                this.audioSystem.play(SoundEffects.CRITICAL_HIT);
+            } else {
+                this.audioSystem.play(SoundEffects.DAMAGE);
+            }
         } else if (card.heal > 0) {
             this.audioSystem.play(SoundEffects.HEAL);
         }
@@ -595,6 +623,8 @@ export class Game {
                 const newCard = this.cardFactory.getRandomCard();
                 if (this.gameState.player.drawCard(newCard)) {
                     this.newPlayerHandCardIds.add(newCard.id);
+                    // 播放抽牌音效
+                    this.audioSystem.play(SoundEffects.CARD_DRAW);
                 }
             }
         }
@@ -612,8 +642,7 @@ export class Game {
             this.updateDisplay();
             this.checkGameOver();
             this.checkAutoEndTurn();
-            // 生成AI解说
-            this.generateCommentary();
+            // 不再在单次操作后生成解说，改为回合结束时总结
         });
     }
 
@@ -642,12 +671,27 @@ export class Game {
     endTurn() {
         if (this.gameState.turn !== 'player' || !this.gameState.gameStarted) return;
 
+        // 记录处理前的buff数量
+        const playerBuffsBefore = this.gameState.player.buffs.length;
+        const opponentBuffsBefore = this.gameState.opponent.buffs.length;
+        
         // 传递日志回调函数，用于记录buff效果
         this.turnManager.endTurn((message, source) => {
             if (this.logSystem) {
                 this.logSystem.addLog(message, source);
             }
         });
+        
+        // 检查是否有buff被移除（在processTurnEndBuffs中）
+        const playerBuffsAfter = this.gameState.player.buffs.length;
+        const opponentBuffsAfter = this.gameState.opponent.buffs.length;
+        if (playerBuffsAfter < playerBuffsBefore) {
+            this.audioSystem.play(SoundEffects.BUFF_REMOVE);
+        }
+        if (opponentBuffsAfter < opponentBuffsBefore) {
+            this.audioSystem.play(SoundEffects.BUFF_REMOVE);
+        }
+        
         this.elements.endTurnBtn.disabled = true;
         this.logSystem.addLog('对手的回合！', 'opponent');
         
@@ -691,6 +735,8 @@ export class Game {
             const newCard = this.cardFactory.getRandomCard();
             if (this.gameState.opponent.drawCard(newCard)) {
                 this.newOpponentHandCardIds.add(newCard.id);
+                // 播放抽牌音效
+                this.audioSystem.play(SoundEffects.CARD_DRAW);
             }
         }
         
@@ -744,9 +790,44 @@ export class Game {
             // 从手牌移除
             this.gameState.opponent.removeCard(card.id);
 
+            // 记录对手出牌事件
+            this.commentator.recordEvent('card_played', { 
+                player: 'opponent', 
+                card: { name: card.name, icon: card.icon, type: card.type } 
+            });
+
+            // 播放出牌音效
+            this.audioSystem.play(SoundEffects.CARD_PLAY);
+
+            // 记录执行前的buff数量
+            const playerBuffsBefore = this.gameState.player.buffs.length;
+            const opponentBuffsBefore = this.gameState.opponent.buffs.length;
+            
             // 执行卡牌效果
             const target = this.cardEffect.determineTarget(card, 'opponent');
             this.cardEffect.execute(card, target, 'opponent');
+            
+            // 根据卡牌类型播放音效
+            if (card.power > 0) {
+                // 高伤害时播放暴击音效
+                if (card.power >= 10) {
+                    this.audioSystem.play(SoundEffects.CRITICAL_HIT);
+                } else {
+                    this.audioSystem.play(SoundEffects.DAMAGE);
+                }
+            } else if (card.heal > 0) {
+                this.audioSystem.play(SoundEffects.HEAL);
+            }
+            
+            // 检查是否有新的buff被添加
+            const playerBuffsAfter = this.gameState.player.buffs.length;
+            const opponentBuffsAfter = this.gameState.opponent.buffs.length;
+            if (playerBuffsAfter > playerBuffsBefore) {
+                this.audioSystem.play(SoundEffects.BUFF_APPLY);
+            }
+            if (opponentBuffsAfter > opponentBuffsBefore) {
+                this.audioSystem.play(SoundEffects.BUFF_APPLY);
+            }
 
             // 处理抽牌效果
             if (card.draw > 0) {
@@ -754,6 +835,8 @@ export class Game {
                     const newCard = this.cardFactory.getRandomCard();
                     if (this.gameState.opponent.drawCard(newCard)) {
                         this.newOpponentHandCardIds.add(newCard.id);
+                        // 播放抽牌音效
+                        this.audioSystem.play(SoundEffects.CARD_DRAW);
                     }
                 }
             }
@@ -780,12 +863,32 @@ export class Game {
      * 开始玩家回合
      */
     startPlayerTurn() {
+        // 在回合开始时生成AI解说，总结上一回合双方的操作
+        // 延迟一点，确保所有事件都已记录
+        setTimeout(() => {
+            this.generateCommentary();
+        }, 500);
+        
+        // 记录处理前的buff数量
+        const playerBuffsBefore = this.gameState.player.buffs.length;
+        const opponentBuffsBefore = this.gameState.opponent.buffs.length;
+        
         // 传递日志回调函数，用于记录buff效果
         this.turnManager.startPlayerTurn((message, source) => {
             if (this.logSystem) {
                 this.logSystem.addLog(message, source);
             }
         });
+        
+        // 检查是否有buff被移除（在processTurnEndBuffs中）
+        const playerBuffsAfter = this.gameState.player.buffs.length;
+        const opponentBuffsAfter = this.gameState.opponent.buffs.length;
+        if (playerBuffsAfter < playerBuffsBefore) {
+            this.audioSystem.play(SoundEffects.BUFF_REMOVE);
+        }
+        if (opponentBuffsAfter < opponentBuffsBefore) {
+            this.audioSystem.play(SoundEffects.BUFF_REMOVE);
+        }
         // 玩家回合开始时增加回合数
         this.gameState.turnNumber++;
         this.updateTurnNumber();
@@ -793,6 +896,8 @@ export class Game {
             const newCard = this.cardFactory.getRandomCard();
             if (this.gameState.player.drawCard(newCard)) {
                 this.newPlayerHandCardIds.add(newCard.id);
+                // 播放抽牌音效
+                this.audioSystem.play(SoundEffects.CARD_DRAW);
             }
         }
         this.elements.endTurnBtn.disabled = false;
@@ -904,15 +1009,24 @@ export class Game {
      * 生成AI解说
      */
     async generateCommentary() {
-        if (!this.commentator.config.enabled || !this.logSystem) {
+        if (!this.commentator.config.enabled) {
             return;
         }
 
         try {
-            const commentary = await this.commentator.generateCommentary(this.gameState);
-            if (commentary) {
-                // 将AI解说添加到弹幕系统
-                this.logSystem.addLog(commentary, 'commentator');
+            const result = await this.commentator.generateCommentary(this.gameState);
+            if (result && result.text) {
+                // 优先显示在左侧 TTS 栏；若未初始化则回退到通用弹幕栏
+                const targetLogSystem = this.ttsLogSystem || this.logSystem;
+                if (!targetLogSystem) {
+                    return;
+                }
+
+                targetLogSystem.addLog(result.text, 'commentator', {
+                    stream: true,                 // 启用流式显示
+                    audioElement: result.audioElement, // 传递音频元素用于同步高亮
+                    persistent: targetLogSystem === this.ttsLogSystem  // TTS 栏中的解说不按时间自动删除
+                });
             }
         } catch (error) {
             console.warn('Failed to generate commentary:', error);

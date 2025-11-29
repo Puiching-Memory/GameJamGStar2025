@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 
 export default defineConfig({
+  base: './', // 使用相对路径，支持 file:// 协议打开
   root: '.',
   publicDir: 'public',
   build: {
@@ -17,28 +18,17 @@ export default defineConfig({
     port: 3000,
     open: true,
     proxy: {
-      // TTS API代理，解决CORS问题
-      '/api/tts': {
-        target: 'https://dashscope.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation',
+      // 开发环境：将 API 请求代理到后端 FastAPI 服务器
+      '/api': {
+        target: 'http://localhost:18000',
         changeOrigin: true,
-        rewrite: (path) => '', // 重写路径为空，因为target已经包含完整路径
-        secure: true
-      },
-      // OSS音频文件代理，解决CORS问题
-      // 动态处理不同OSS域名的请求
-      '/api/audio': {
-        target: 'http://dashscope-result-wlcb.oss-cn-wulanchabu.aliyuncs.com',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/audio/, ''),
-        secure: false,
-        configure: (proxy, _options) => {
-          proxy.on('proxyReq', (proxyReq, req, res) => {
-            // 允许跨域
-            proxyReq.setHeader('Origin', '');
-          });
-        }
+        secure: false
       }
     }
+  },
+  preview: {
+    port: 4173, // Vite 预览服务器默认端口
+    open: true
   }
 });
 

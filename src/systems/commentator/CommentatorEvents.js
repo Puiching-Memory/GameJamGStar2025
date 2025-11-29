@@ -67,8 +67,28 @@ export class CommentatorEvents {
         return {
             playerHealth: gameState.player.health,
             playerMana: gameState.player.mana,
+            playerHand: gameState.player.hand.map(card => ({
+                id: card.id,
+                name: card.name,
+                icon: card.icon,
+                type: card.type,
+                cost: card.cost,
+                power: card.power,
+                heal: card.heal || 0,
+                draw: card.draw || 0
+            })),
             opponentHealth: gameState.opponent.health,
             opponentMana: gameState.opponent.mana,
+            opponentHand: gameState.opponent.hand.map(card => ({
+                id: card.id,
+                name: card.name,
+                icon: card.icon,
+                type: card.type,
+                cost: card.cost,
+                power: card.power,
+                heal: card.heal || 0,
+                draw: card.draw || 0
+            })),
             turn: gameState.turn,
             turnNumber: gameState.turnNumber
         };

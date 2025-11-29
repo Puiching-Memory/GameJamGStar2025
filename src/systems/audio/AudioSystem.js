@@ -23,11 +23,20 @@ export class AudioSystem {
         // 预加载常用音效
         const commonSounds = [
             SoundEffects.CARD_PLAY,
+            SoundEffects.CARD_DRAW,
             SoundEffects.DAMAGE,
             SoundEffects.HEAL,
+            SoundEffects.BUFF_APPLY,
+            SoundEffects.BUFF_REMOVE,
             SoundEffects.BUTTON_CLICK,
             SoundEffects.GAME_START,
-            SoundEffects.GAME_OVER
+            SoundEffects.GAME_OVER,
+            SoundEffects.TURN_START,
+            SoundEffects.TURN_END,
+            SoundEffects.VICTORY,
+            SoundEffects.DEFEAT,
+            SoundEffects.ERROR,
+            SoundEffects.CRITICAL_HIT
         ];
 
         try {
