@@ -18,6 +18,8 @@ import { GitGraphRenderer } from '../ui/GitGraphRenderer.js';
 import { CommentatorSystem } from '../systems/commentator/CommentatorSystem.js';
 import { AudioSystem } from '../systems/audio/AudioSystem.js';
 import { SoundEffects } from '../systems/audio/SoundEffects.js';
+import { ComboSystem } from '../gameplay/ComboSystem.js';
+import { ComboGuide } from '../ui/ComboGuide.js';
 
 /**
  * 主游戏类
@@ -29,8 +31,11 @@ export class Game {
         this.gameState = new GameState();
         this.cardFactory = new CardFactory();
 
+        // 组合技系统
+        this.comboSystem = new ComboSystem();
+
         // 游戏逻辑模块
-        this.cardEffect = new CardEffect(this.gameState, null); // logSystem稍后设置
+        this.cardEffect = new CardEffect(this.gameState, null, this.comboSystem); // logSystem稍后设置
         this.turnManager = new TurnManager(this.gameState, this.cardFactory);
         this.ai = new AI(this.gameState, this.cardFactory);
 
@@ -49,6 +54,9 @@ export class Game {
         // 交互模块
         this.dragDrop = null; // 稍后初始化
         this.tooltip = null; // Tooltip系统
+
+        // 组合技引导UI
+        this.comboGuide = null; // 稍后初始化
 
         // AI解说员系统
         this.commentator = new CommentatorSystem();
@@ -125,7 +133,8 @@ export class Game {
             turnNumberEl: document.getElementById('turn-number'),
             playerBuffsEl: document.getElementById('player-buffs'),
             opponentBuffsEl: document.getElementById('opponent-buffs'),
-            gitGraphContainer: document.getElementById('git-graph-container')
+            gitGraphContainer: document.getElementById('git-graph-container'),
+            comboGuideContainer: document.getElementById('combo-guide-container')
         };
     }
 
@@ -184,9 +193,9 @@ export class Game {
 
         // 拖拽处理
         this.dragDrop = new DragDrop(this.elements.dropZone, {
-            onDrop: (e) => {
+            onDrop: (e, dropPosition) => {
                 if (this.draggedCard && this.gameState.turn === 'player' && this.gameState.gameStarted) {
-                    this.playCard(this.draggedCard);
+                    this.playCard(this.draggedCard, dropPosition);
                     this.draggedCard = null;
                 }
             }
@@ -195,6 +204,11 @@ export class Game {
         // Git Graph渲染器
         if (this.elements.gitGraphContainer) {
             this.gitGraphRenderer = new GitGraphRenderer(this.elements.gitGraphContainer);
+        }
+
+        // 组合技引导UI
+        if (this.elements.comboGuideContainer) {
+            this.comboGuide = new ComboGuide('combo-guide-container', this.comboSystem);
         }
     }
 
@@ -376,6 +390,17 @@ export class Game {
         // 播放游戏开始音效
         this.audioSystem.play(SoundEffects.GAME_START);
         
+        // 初始化组合技引导窗口（让它常驻显示）
+        if (this.comboGuide) {
+            this.comboGuide.initialize();
+            // 初始化后立即更新一次，显示当前手牌的推荐
+            setTimeout(() => {
+                const playedCards = this.gameState.getTurnSequence('player');
+                const handCards = this.gameState.player.hand;
+                this.comboGuide.update(playedCards, handCards);
+            }, 100);
+        }
+        
         // 记录事件并生成AI解说
         this.commentator.recordEvent('game_start', {});
         this.commentator.recordEvent('turn_start', { player: 'player' });
@@ -479,6 +504,18 @@ export class Game {
         // 更新缓存的手牌数量
         this.prevPlayerHandSize = currentPlayerHandSize;
         this.prevOpponentHandSize = currentOpponentHandSize;
+
+        // 更新组合技引导（窗口常驻，仅在玩家回合且游戏已开始时显示推荐）
+        if (this.comboGuide) {
+            if (this.gameState.turn === 'player' && this.gameState.gameStarted) {
+                const playedCards = this.gameState.getTurnSequence('player');
+                const handCards = this.gameState.player.hand;
+                this.comboGuide.update(playedCards, handCards);
+            } else {
+                // 非玩家回合时显示空状态
+                this.comboGuide.update([], []);
+            }
+        }
     }
 
     /**
@@ -556,7 +593,7 @@ export class Game {
     /**
      * 打出卡牌
      */
-    playCard(card) {
+    playCard(card, dropPosition = null) {
         if (this.gameState.turn !== 'player' || !this.gameState.gameStarted) return;
         if (this.gameState.player.mana < card.cost) {
             this.logSystem.addLog('能量不足！', 'system');
@@ -587,13 +624,39 @@ export class Game {
         // 从手牌移除（游戏状态）
         this.gameState.player.removeCard(card.id);
 
+        // 添加卡牌到当前回合序列（用于组合技检测）
+        this.gameState.addCardToTurnSequence(card, 'player');
+
+        // 检测组合技
+        const playedCards = this.gameState.getTurnSequence('player');
+        const activeCombos = this.comboSystem.detectCombos(playedCards);
+
+        // 准备组合技加成信息
+        let comboBonus = null;
+        if (activeCombos.length > 0) {
+            const combo = activeCombos[0]; // 使用最长的匹配组合技
+            const damageMultiplier = 1 + combo.bonusDamage;
+            comboBonus = {
+                damageMultiplier: damageMultiplier,
+                comboInfo: combo.combo
+            };
+
+            // 显示组合技触发消息
+            this.logSystem.addLog(
+                `🔥 触发组合技：${combo.combo.icon} ${combo.combo.name}！额外伤害 +${Math.round(combo.bonusDamage * 100)}%`,
+                'system'
+            );
+            // 播放组合技音效（如果有的话）
+            this.audioSystem.play(SoundEffects.CRITICAL_HIT);
+        }
+
         // 记录执行前的buff数量
         const playerBuffsBefore = this.gameState.player.buffs.length;
         const opponentBuffsBefore = this.gameState.opponent.buffs.length;
         
-        // 执行卡牌效果
+        // 执行卡牌效果（传入组合技加成）
         const target = this.cardEffect.determineTarget(card, 'player');
-        this.cardEffect.execute(card, target, 'player');
+        this.cardEffect.execute(card, target, 'player', comboBonus);
         
         // 检查是否有新的buff被添加
         const playerBuffsAfter = this.gameState.player.buffs.length;
@@ -634,7 +697,8 @@ export class Game {
             card,
             'player',
             this.cardRenderer,
-            this.gameState.currentTurnCards
+            this.gameState.currentTurnCards,
+            dropPosition
         );
 
         // 等退出动画结束后，再更新显示和自动结束回合逻辑
@@ -692,6 +756,9 @@ export class Game {
             this.audioSystem.play(SoundEffects.BUFF_REMOVE);
         }
         
+        // 清空当前回合的卡牌序列
+        this.gameState.clearTurnSequence('player');
+
         this.elements.endTurnBtn.disabled = true;
         this.logSystem.addLog('对手的回合！', 'opponent');
         
@@ -790,6 +857,30 @@ export class Game {
             // 从手牌移除
             this.gameState.opponent.removeCard(card.id);
 
+            // 添加卡牌到当前回合序列（用于组合技检测）
+            this.gameState.addCardToTurnSequence(card, 'opponent');
+
+            // 检测组合技
+            const playedCards = this.gameState.getTurnSequence('opponent');
+            const activeCombos = this.comboSystem.detectCombos(playedCards);
+
+            // 准备组合技加成信息
+            let comboBonus = null;
+            if (activeCombos.length > 0) {
+                const combo = activeCombos[0]; // 使用最长的匹配组合技
+                const damageMultiplier = 1 + combo.bonusDamage;
+                comboBonus = {
+                    damageMultiplier: damageMultiplier,
+                    comboInfo: combo.combo
+                };
+
+                // 显示组合技触发消息（对手）
+                this.logSystem.addLog(
+                    `🔥 对手触发组合技：${combo.combo.icon} ${combo.combo.name}！额外伤害 +${Math.round(combo.bonusDamage * 100)}%`,
+                    'opponent'
+                );
+            }
+
             // 记录对手出牌事件
             this.commentator.recordEvent('card_played', { 
                 player: 'opponent', 
@@ -803,9 +894,9 @@ export class Game {
             const playerBuffsBefore = this.gameState.player.buffs.length;
             const opponentBuffsBefore = this.gameState.opponent.buffs.length;
             
-            // 执行卡牌效果
+            // 执行卡牌效果（传入组合技加成）
             const target = this.cardEffect.determineTarget(card, 'opponent');
-            this.cardEffect.execute(card, target, 'opponent');
+            this.cardEffect.execute(card, target, 'opponent', comboBonus);
             
             // 根据卡牌类型播放音效
             if (card.power > 0) {
@@ -889,6 +980,9 @@ export class Game {
         if (opponentBuffsAfter < opponentBuffsBefore) {
             this.audioSystem.play(SoundEffects.BUFF_REMOVE);
         }
+        // 清空对手回合的卡牌序列
+        this.gameState.clearTurnSequence('opponent');
+
         // 玩家回合开始时增加回合数
         this.gameState.turnNumber++;
         this.updateTurnNumber();

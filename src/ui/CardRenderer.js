@@ -11,29 +11,34 @@ export class CardRenderer {
      * 构建卡牌HTML内容
      */
     buildCardHTML(card) {
-        let valueDisplay = '';
+        // 构建底部效果栏
+        const effects = [];
+        
         if (card.power > 0) {
-            valueDisplay = `<div class="card-power">${card.power}</div>`;
-        } else if (card.heal > 0) {
-            valueDisplay = `<div class="card-heal">💚${card.heal}</div>`;
+            effects.push(`<div class="card-effect card-power">⚔️${card.power}</div>`);
+        }
+        
+        if (card.heal > 0) {
+            effects.push(`<div class="card-effect card-heal">💚${card.heal}</div>`);
+        }
+        
+        if (card.draw > 0) {
+            effects.push(`<div class="card-effect card-draw">📚${card.draw}</div>`);
         }
 
-        let drawDisplay = '';
-        if (card.draw > 0) {
-            if (card.power > 0 || card.heal > 0) {
-                drawDisplay = `<div class="card-draw-top">📚${card.draw}</div>`;
-            } else {
-                drawDisplay = `<div class="card-draw">📚${card.draw}</div>`;
-            }
-        }
+        const effectsHTML = effects.length > 0 
+            ? `<div class="card-effects">${effects.join('')}</div>` 
+            : '';
 
         return `
-            <div class="card-cost">${card.cost}</div>
-            ${drawDisplay}
+            <div class="card-cost">
+                <span class="card-cost-icon">⚡</span>
+                <span class="card-cost-value">${card.cost}</span>
+            </div>
             <div class="card-header">${card.name}</div>
             <div class="card-icon">${card.icon}</div>
             <div class="card-description">${card.description}</div>
-            ${valueDisplay}
+            ${effectsHTML}
         `;
     }
 

@@ -64,11 +64,24 @@
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
     position: absolute;
     overflow: hidden;
-    transition: all 0.5s ease;
-    cursor: default;
+    transition: all 0.2s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    cursor: grab;
     transform-style: preserve-3d;
     z-index: 1;
     transform: rotate(var(--card-rotation, 0deg));
+    user-select: none;
+}
+
+.played-card-in-zone:active {
+    cursor: grabbing;
+    transition: none; /* 拖拽时禁用过渡动画 */
+}
+
+.played-card-in-zone.dragging {
+    opacity: 0.8;
+    transform: rotate(var(--card-rotation, 0deg)) scale(1.05);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.8);
+    z-index: 1000 !important;
 }
 
 /* 玩家打出的卡牌 - GitHub 绿色系，与玩家手牌配色一致 */
@@ -81,6 +94,7 @@
 .played-card-in-zone.opponent-card {
     background: linear-gradient(135deg, #3c1f2b 0%, #8b2f4a 100%);
     border: 2px solid rgba(248, 81, 73, 0.9);
+    cursor: default; /* 对手卡牌不允许拖拽 */
 }
 
 /* 本回合打出的卡牌 - 视觉高亮 */
@@ -104,16 +118,16 @@
     z-index: 20;
 }
 
-/* 卡牌悬停效果 - 保留原有旋转角度 */
+/* 卡牌悬停效果 - 保留原有旋转角度，仅移到顶层，不放大 */
 .played-card-in-zone:hover {
-    transform: scale(1.15) translateY(-10px) rotate(var(--card-rotation, 0deg)) !important;
+    transform: translateY(-3px) rotate(var(--card-rotation, 0deg)) !important;
     z-index: 100 !important;
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
 }
 
 /* 最后一张卡牌悬停时保持高亮和旋转 */
 .played-card-in-zone.last-played-card:hover {
-    transform: scale(1.15) translateY(-10px) rotate(var(--card-rotation, 0deg)) !important;
+    transform: translateY(-3px) rotate(var(--card-rotation, 0deg)) !important;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7), 
                 0 0 40px rgba(255, 215, 0, 1),
                 0 0 80px rgba(255, 215, 0, 0.8),

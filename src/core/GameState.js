@@ -11,6 +11,10 @@ export class GameState {
         this.turn = 'player';
         this.gameStarted = false;
         this.currentTurnCards = []; // 当前回合打出的卡牌元素
+        this.currentTurnCardSequence = { // 当前回合打出的卡牌序列（用于组合技检测）
+            player: [],
+            opponent: []
+        };
         this.turnNumber = 0; // 当前回合数
     }
 
@@ -62,7 +66,42 @@ export class GameState {
         this.turn = 'player';
         this.gameStarted = false;
         this.currentTurnCards = [];
+        this.currentTurnCardSequence = {
+            player: [],
+            opponent: []
+        };
         this.turnNumber = 0;
+    }
+
+    /**
+     * 添加卡牌到当前回合序列
+     * @param {Card} card - 卡牌对象
+     * @param {string} playerType - 玩家类型 ('player' 或 'opponent')
+     */
+    addCardToTurnSequence(card, playerType) {
+        if (!this.currentTurnCardSequence[playerType]) {
+            this.currentTurnCardSequence[playerType] = [];
+        }
+        this.currentTurnCardSequence[playerType].push(card);
+    }
+
+    /**
+     * 清空当前回合的卡牌序列
+     * @param {string} playerType - 玩家类型 ('player' 或 'opponent')
+     */
+    clearTurnSequence(playerType) {
+        if (this.currentTurnCardSequence[playerType]) {
+            this.currentTurnCardSequence[playerType] = [];
+        }
+    }
+
+    /**
+     * 获取当前回合的卡牌序列
+     * @param {string} playerType - 玩家类型 ('player' 或 'opponent')
+     * @returns {Card[]} - 当前回合的卡牌序列
+     */
+    getTurnSequence(playerType) {
+        return this.currentTurnCardSequence[playerType] || [];
     }
 
     /**

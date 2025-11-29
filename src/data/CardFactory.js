@@ -3,6 +3,21 @@ import { Buff } from '../core/Buff.js';
 import { CARD_DATA } from './CardData.js';
 
 /**
+ * 应用组合技伤害加成
+ * @param {number} baseDamage - 基础伤害
+ * @param {GameState} gameState - 游戏状态
+ * @returns {number} - 加成后的伤害
+ */
+function applyComboBonus(baseDamage, gameState) {
+    if (!gameState._currentComboBonus) {
+        return baseDamage;
+    }
+    
+    const bonusMultiplier = gameState._currentComboBonus.damageMultiplier || 1;
+    return Math.floor(baseDamage * bonusMultiplier);
+}
+
+/**
  * 卡牌工厂
  * 负责创建卡牌实例和卡牌效果
  */
@@ -20,21 +35,24 @@ export class CardFactory {
             'add': (gameState, target, cardUser) => {
                 const targetPlayer = target === 'opponent' ? gameState.opponent : gameState.player;
                 const userPlayer = cardUser === 'opponent' ? gameState.opponent : gameState.player;
-                const damage = userPlayer.calculateAttackDamage(4);
+                const baseDamage = userPlayer.calculateAttackDamage(4);
+                const damage = applyComboBonus(baseDamage, gameState);
                 targetPlayer.takeDamage(damage);
                 return `➕ 使用了 Add，造成 ${damage} 点伤害！`;
             },
             'commit': (gameState, target, cardUser) => {
                 const targetPlayer = target === 'opponent' ? gameState.opponent : gameState.player;
                 const userPlayer = cardUser === 'opponent' ? gameState.opponent : gameState.player;
-                const damage = userPlayer.calculateAttackDamage(5);
+                const baseDamage = userPlayer.calculateAttackDamage(5);
+                const damage = applyComboBonus(baseDamage, gameState);
                 targetPlayer.takeDamage(damage);
                 return `💾 使用了 Commit，造成 ${damage} 点伤害！`;
             },
             'push': (gameState, target, cardUser) => {
                 const targetPlayer = target === 'opponent' ? gameState.opponent : gameState.player;
                 const userPlayer = cardUser === 'opponent' ? gameState.opponent : gameState.player;
-                const damage = userPlayer.calculateAttackDamage(10);
+                const baseDamage = userPlayer.calculateAttackDamage(10);
+                const damage = applyComboBonus(baseDamage, gameState);
                 targetPlayer.takeDamage(damage);
                 return `⬆️ 使用了 Push，造成 ${damage} 点伤害！`;
             },
@@ -52,7 +70,8 @@ export class CardFactory {
             'clone': (gameState, target, cardUser) => {
                 const targetPlayer = target === 'opponent' ? gameState.opponent : gameState.player;
                 const userPlayer = cardUser === 'opponent' ? gameState.opponent : gameState.player;
-                const damage = userPlayer.calculateAttackDamage(18);
+                const baseDamage = userPlayer.calculateAttackDamage(18);
+                const damage = applyComboBonus(baseDamage, gameState);
                 targetPlayer.takeDamage(damage);
                 return `📋 使用了 Clone，造成 ${damage} 点巨大伤害！`;
             },
@@ -65,7 +84,8 @@ export class CardFactory {
             'checkout': (gameState, target, cardUser) => {
                 const targetPlayer = target === 'opponent' ? gameState.opponent : gameState.player;
                 const userPlayer = cardUser === 'opponent' ? gameState.opponent : gameState.player;
-                const damage = userPlayer.calculateAttackDamage(8);
+                const baseDamage = userPlayer.calculateAttackDamage(8);
+                const damage = applyComboBonus(baseDamage, gameState);
                 targetPlayer.takeDamage(damage);
                 // 抽牌逻辑由外部处理
                 return `🔀 使用了 Checkout，造成 ${damage} 点伤害并抽一张牌！`;
@@ -73,14 +93,16 @@ export class CardFactory {
             'merge': (gameState, target, cardUser) => {
                 const targetPlayer = target === 'opponent' ? gameState.opponent : gameState.player;
                 const userPlayer = cardUser === 'opponent' ? gameState.opponent : gameState.player;
-                const damage = userPlayer.calculateAttackDamage(15);
+                const baseDamage = userPlayer.calculateAttackDamage(15);
+                const damage = applyComboBonus(baseDamage, gameState);
                 targetPlayer.takeDamage(damage);
                 return `🔀 使用了 Merge，造成 ${damage} 点伤害！`;
             },
             'rebase': (gameState, target, cardUser) => {
                 const targetPlayer = target === 'opponent' ? gameState.opponent : gameState.player;
                 const userPlayer = cardUser === 'opponent' ? gameState.opponent : gameState.player;
-                const damage = userPlayer.calculateAttackDamage(12);
+                const baseDamage = userPlayer.calculateAttackDamage(12);
+                const damage = applyComboBonus(baseDamage, gameState);
                 targetPlayer.takeDamage(damage);
                 // 抽牌逻辑由外部处理
                 return `🔄 使用了 Rebase，造成 ${damage} 点伤害并抽一张牌！`;
@@ -94,7 +116,8 @@ export class CardFactory {
             'show': (gameState, target, cardUser) => {
                 const targetPlayer = target === 'opponent' ? gameState.opponent : gameState.player;
                 const userPlayer = cardUser === 'opponent' ? gameState.opponent : gameState.player;
-                const damage = userPlayer.calculateAttackDamage(6);
+                const baseDamage = userPlayer.calculateAttackDamage(6);
+                const damage = applyComboBonus(baseDamage, gameState);
                 targetPlayer.takeDamage(damage);
                 // 抽牌逻辑由外部处理
                 return `👁️ 使用了 Show，造成 ${damage} 点伤害并抽一张牌！`;
@@ -102,7 +125,8 @@ export class CardFactory {
             'diff': (gameState, target, cardUser) => {
                 const targetPlayer = target === 'opponent' ? gameState.opponent : gameState.player;
                 const userPlayer = cardUser === 'opponent' ? gameState.opponent : gameState.player;
-                const damage = userPlayer.calculateAttackDamage(9);
+                const baseDamage = userPlayer.calculateAttackDamage(9);
+                const damage = applyComboBonus(baseDamage, gameState);
                 targetPlayer.takeDamage(damage);
                 return `🔍 使用了 Diff，造成 ${damage} 点伤害！`;
             },
@@ -118,7 +142,8 @@ export class CardFactory {
             'bisect': (gameState, target, cardUser) => {
                 const targetPlayer = target === 'opponent' ? gameState.opponent : gameState.player;
                 const userPlayer = cardUser === 'opponent' ? gameState.opponent : gameState.player;
-                const damage = userPlayer.calculateAttackDamage(11);
+                const baseDamage = userPlayer.calculateAttackDamage(11);
+                const damage = applyComboBonus(baseDamage, gameState);
                 targetPlayer.takeDamage(damage);
                 // 抽牌逻辑由外部处理
                 return `🔎 使用了 Bisect，造成 ${damage} 点伤害并抽一张牌！`;
@@ -148,7 +173,8 @@ export class CardFactory {
             'cherry-pick': (gameState, target, cardUser) => {
                 const targetPlayer = target === 'opponent' ? gameState.opponent : gameState.player;
                 const userPlayer = cardUser === 'opponent' ? gameState.opponent : gameState.player;
-                const damage = userPlayer.calculateAttackDamage(8);
+                const baseDamage = userPlayer.calculateAttackDamage(8);
+                const damage = applyComboBonus(baseDamage, gameState);
                 targetPlayer.takeDamage(damage);
                 // 抽牌逻辑由外部处理
                 return `🍒 使用了 Cherry Pick，造成 ${damage} 点伤害并抽一张牌！`;
@@ -158,21 +184,24 @@ export class CardFactory {
             'remote': (gameState, target, cardUser) => {
                 const targetPlayer = target === 'opponent' ? gameState.opponent : gameState.player;
                 const userPlayer = cardUser === 'opponent' ? gameState.opponent : gameState.player;
-                const damage = userPlayer.calculateAttackDamage(8);
+                const baseDamage = userPlayer.calculateAttackDamage(8);
+                const damage = applyComboBonus(baseDamage, gameState);
                 targetPlayer.takeDamage(damage);
                 return `🌐 使用了 Remote，造成 ${damage} 点伤害！`;
             },
             'submodule': (gameState, target, cardUser) => {
                 const targetPlayer = target === 'opponent' ? gameState.opponent : gameState.player;
                 const userPlayer = cardUser === 'opponent' ? gameState.opponent : gameState.player;
-                const damage = userPlayer.calculateAttackDamage(14);
+                const baseDamage = userPlayer.calculateAttackDamage(14);
+                const damage = applyComboBonus(baseDamage, gameState);
                 targetPlayer.takeDamage(damage);
                 return `📁 使用了 Submodule，造成 ${damage} 点伤害！`;
             },
             'worktree': (gameState, target, cardUser) => {
                 const targetPlayer = target === 'opponent' ? gameState.opponent : gameState.player;
                 const userPlayer = cardUser === 'opponent' ? gameState.opponent : gameState.player;
-                const damage = userPlayer.calculateAttackDamage(7);
+                const baseDamage = userPlayer.calculateAttackDamage(7);
+                const damage = applyComboBonus(baseDamage, gameState);
                 targetPlayer.takeDamage(damage);
                 // 抽牌逻辑由外部处理
                 return `🌳 使用了 Worktree，造成 ${damage} 点伤害并抽一张牌！`;

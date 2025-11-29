@@ -14,16 +14,17 @@ export class CardAnimation {
      * 播放卡牌出牌动画
      * 已删除所有动画，只保留创建和显示卡牌的逻辑
      */
-    animateCardPlay(card, player, cardRenderer, currentTurnCards) {
+    animateCardPlay(card, player, cardRenderer, currentTurnCards, dropPosition = null) {
         // 直接显示卡牌，不使用动画
-        this.showPlayedCardDirectly(card, player, cardRenderer, currentTurnCards);
+        this.showPlayedCardDirectly(card, player, cardRenderer, currentTurnCards, dropPosition);
     }
 
     /**
      * 直接显示卡牌（无动画）
      */
-    showPlayedCardDirectly(card, player, cardRenderer, currentTurnCards) {
-        const position = this.generateRandomCardPosition();
+    showPlayedCardDirectly(card, player, cardRenderer, currentTurnCards, dropPosition = null) {
+        // 如果提供了dropPosition，使用它；否则使用随机位置
+        const position = dropPosition || this.generateRandomCardPosition();
         const playedCardEl = cardRenderer.createPlayedCardElement(card, player);
         
         playedCardEl.style.position = 'absolute';
@@ -48,11 +49,89 @@ export class CardAnimation {
             { once: true }
         );
 
+        // 为已打出的卡牌添加拖拽功能
+        this.setupCardDragging(playedCardEl);
+
         if (this.dropZoneHint) {
             this.dropZoneHint.style.display = 'none';
         }
 
         this.playedCardsContainer.appendChild(playedCardEl);
+    }
+
+    /**
+     * 为已打出的卡牌设置拖拽功能
+     */
+    setupCardDragging(cardEl) {
+        // 只允许玩家卡牌被拖拽
+        if (!cardEl.classList.contains('player-card')) {
+            return;
+        }
+
+        let isDragging = false;
+        let startX = 0;
+        let startY = 0;
+        let initialLeft = 0;
+        let initialTop = 0;
+
+        const handleMouseDown = (e) => {
+            // 只允许左键拖拽
+            if (e.button !== 0) return;
+            
+            isDragging = true;
+            cardEl.classList.add('dragging');
+            cardEl.style.transition = 'none'; // 拖拽时禁用过渡
+            cardEl.style.zIndex = '1000'; // 拖拽时移到最顶层
+            
+            // 获取初始位置
+            const rect = cardEl.getBoundingClientRect();
+            const containerRect = this.playedCardsContainer.getBoundingClientRect();
+            
+            startX = e.clientX;
+            startY = e.clientY;
+            initialLeft = rect.left - containerRect.left;
+            initialTop = rect.top - containerRect.top;
+            
+            e.preventDefault();
+        };
+
+        const handleMouseMove = (e) => {
+            if (!isDragging) return;
+            
+            const containerRect = this.playedCardsContainer.getBoundingClientRect();
+            const cardWidth = 110;
+            const cardHeight = 150;
+            
+            // 计算新位置
+            const deltaX = e.clientX - startX;
+            const deltaY = e.clientY - startY;
+            let newLeft = initialLeft + deltaX;
+            let newTop = initialTop + deltaY;
+            
+            // 限制在容器范围内
+            const maxX = Math.max(0, containerRect.width - cardWidth);
+            const maxY = Math.max(0, containerRect.height - cardHeight);
+            newLeft = Math.max(0, Math.min(newLeft, maxX));
+            newTop = Math.max(0, Math.min(newTop, maxY));
+            
+            cardEl.style.left = `${newLeft}px`;
+            cardEl.style.top = `${newTop}px`;
+        };
+
+        const handleMouseUp = () => {
+            if (!isDragging) return;
+            
+            isDragging = false;
+            cardEl.classList.remove('dragging');
+            cardEl.style.transition = ''; // 恢复过渡动画
+            cardEl.style.zIndex = ''; // 恢复z-index
+        };
+
+        cardEl.addEventListener('mousedown', handleMouseDown);
+        
+        // 使用document来监听，确保即使鼠标移出卡牌也能继续拖拽
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseup', handleMouseUp);
     }
 
     /**

@@ -4,6 +4,7 @@
  */
 export class Card {
     constructor(data) {
+        this.baseId = data.id; // 存储原始基础ID，方便组合技检测
         this.id = data.id + '_' + Date.now() + '_' + Math.random();
         this.name = data.name;
         this.icon = data.icon;

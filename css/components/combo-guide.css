@@ -1,0 +1,450 @@
+/* 组合技引导容器 - 重新设计，更大更清晰 */
+.combo-guide-container {
+    position: fixed !important;
+    /* left, bottom, height 通过 JavaScript 动态设置 */
+    width: 350px !important;
+    height: 200px !important; /* 与player-hand-container高度一致 */
+    overflow: hidden !important;
+    /* 浮动窗口样式 */
+    background: rgba(13, 17, 23, 0.95) !important;
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    border: 2px solid rgba(100, 200, 255, 0.7) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 0 20px rgba(100, 200, 255, 0.25);
+    padding: 8px 12px !important;
+    z-index: 10010 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    animation: comboGuideSlideIn 0.4s ease-out;
+    pointer-events: auto;
+    box-sizing: border-box;
+}
+
+@keyframes comboGuideSlideIn {
+    from {
+        opacity: 0;
+        transform: translateX(50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* 标题 */
+.combo-guide-title {
+    font-size: 14px;
+    font-weight: bold;
+    color: #fff;
+    text-align: center;
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+    border-bottom: 2px solid rgba(100, 200, 255, 0.4);
+    text-shadow: 0 0 8px rgba(100, 200, 255, 0.5);
+    flex-shrink: 0;
+}
+
+/* 内容区域 - 支持滚动 */
+.combo-guide-content {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px; /* 增大间距 */
+    padding-right: 4px; /* 为滚动条留出空间 */
+    align-items: stretch; /* 拉伸子元素到全宽 */
+}
+
+/* 滚动条样式 */
+.combo-guide-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.combo-guide-content::-webkit-scrollbar-track {
+    background: rgba(22, 27, 34, 0.9);
+    border-radius: 10px;
+}
+
+.combo-guide-content::-webkit-scrollbar-thumb {
+    background: rgba(88, 166, 255, 0.6);
+    border-radius: 10px;
+}
+
+.combo-guide-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(88, 166, 255, 0.9);
+}
+
+/* 空状态样式 */
+.combo-guide-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    text-align: center;
+    padding: 30px 20px;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.empty-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+    opacity: 0.5;
+}
+
+.empty-text {
+    font-size: 14px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.8);
+    margin-bottom: 6px;
+}
+
+.empty-hint {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.5);
+    line-height: 1.5;
+}
+
+/* 组合技引导项 - 重新设计，更大更清晰 */
+.combo-guide-item {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background: linear-gradient(135deg, rgba(30, 40, 55, 0.95), rgba(40, 50, 65, 0.95));
+    border: 2px solid rgba(100, 200, 255, 0.5);
+    border-radius: 8px;
+    padding: 10px 12px;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    animation: comboGuideFadeIn 0.4s ease;
+    position: relative;
+    overflow: hidden; /* 改为hidden，以便高光动画不溢出 */
+    flex-shrink: 0; /* 不收缩，保持自然高度 */
+    min-height: fit-content; /* 根据内容自适应高度 */
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* 高光划过动画的伪元素 */
+.combo-guide-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(100, 200, 255, 0.4) 50%,
+        transparent 100%
+    );
+    transition: left 0.6s ease;
+    pointer-events: none;
+    z-index: 0;
+    border-radius: 8px;
+}
+
+.combo-guide-item:hover::before {
+    left: 100%;
+}
+
+@keyframes comboGuideFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.combo-guide-item:hover {
+    border-color: rgba(100, 200, 255, 0.9);
+    box-shadow: 0 4px 16px rgba(100, 200, 255, 0.4);
+}
+
+/* 新设计的组合技头部 */
+.combo-guide-header-new {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1; /* 确保内容在高光之上 */
+}
+
+.combo-header-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    min-width: 0;
+}
+
+.combo-icon-new {
+    font-size: 24px;
+    line-height: 1;
+    filter: drop-shadow(0 0 6px rgba(100, 200, 255, 0.6));
+    flex-shrink: 0;
+}
+
+.combo-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+    min-width: 0;
+}
+
+.combo-name-new {
+    font-size: 14px;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 0 0 6px rgba(100, 200, 255, 0.4);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.combo-ready-badge-new {
+    background: linear-gradient(135deg, #3fb950, #2ea043);
+    color: #fff;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: bold;
+    box-shadow: 0 2px 6px rgba(63, 185, 80, 0.4);
+    width: fit-content;
+}
+
+/* 组合技加成 */
+.combo-guide-bonus-new {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    font-weight: bold;
+    color: #ffd700;
+    padding: 4px 8px;
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 235, 59, 0.2));
+    border-radius: 6px;
+    border: 1px solid rgba(255, 215, 0, 0.5);
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+.bonus-icon {
+    font-size: 14px;
+    filter: drop-shadow(0 0 4px rgba(255, 215, 0, 0.6));
+}
+
+.bonus-text {
+    text-shadow: 0 0 6px rgba(255, 215, 0, 0.5);
+}
+
+/* 新设计的连招路径 */
+.combo-guide-path-new {
+    padding: 6px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 6px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    flex-shrink: 0;
+    min-height: 62px;
+    position: relative;
+    z-index: 1; /* 确保内容在高光之上 */
+}
+
+.combo-path {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 6px;
+    flex-wrap: nowrap;
+    min-width: min-content;
+}
+
+/* 卡牌路径项 - 重新设计，更大更清晰 */
+.combo-path-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 6px 8px;
+    background: rgba(100, 200, 255, 0.15);
+    border: 2px solid rgba(100, 200, 255, 0.4);
+    border-radius: 6px;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+    min-width: 50px;
+    min-height: 50px;
+    box-sizing: border-box;
+}
+
+.combo-path-card.completed {
+    background: linear-gradient(135deg, rgba(100, 200, 255, 0.4), rgba(150, 220, 255, 0.4));
+    border-color: rgba(100, 200, 255, 0.9);
+    box-shadow: 0 0 12px rgba(100, 200, 255, 0.6);
+}
+
+/* 成功动画 - 当玩家正确出牌时 */
+.combo-path-card.combo-success-animation {
+    animation: comboSuccessAnimation 0.8s ease-out;
+    z-index: 10; /* 确保在动画期间显示在最上层 */
+}
+
+@keyframes comboSuccessAnimation {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 12px rgba(100, 200, 255, 0.6);
+        filter: brightness(1);
+    }
+    30% {
+        transform: scale(1.25) rotate(5deg);
+        box-shadow: 0 0 30px rgba(63, 185, 80, 1), 0 0 50px rgba(63, 185, 80, 0.8);
+        background: linear-gradient(135deg, rgba(63, 185, 80, 0.8), rgba(75, 205, 100, 0.8));
+        border-color: rgba(63, 185, 80, 1);
+        filter: brightness(1.5);
+    }
+    60% {
+        transform: scale(1.15) rotate(-3deg);
+        box-shadow: 0 0 35px rgba(63, 185, 80, 1), 0 0 60px rgba(63, 185, 80, 0.9);
+        background: linear-gradient(135deg, rgba(63, 185, 80, 0.9), rgba(75, 205, 100, 0.9));
+        filter: brightness(1.3);
+    }
+    100% {
+        transform: scale(1) rotate(0deg);
+        box-shadow: 0 0 12px rgba(100, 200, 255, 0.6);
+        background: linear-gradient(135deg, rgba(100, 200, 255, 0.4), rgba(150, 220, 255, 0.4));
+        border-color: rgba(100, 200, 255, 0.9);
+        filter: brightness(1);
+    }
+}
+
+.combo-path-card.next {
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.3), rgba(255, 235, 59, 0.3));
+    border-color: rgba(255, 215, 0, 0.9);
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.7);
+    animation: nextCardPulse 1.5s ease infinite;
+}
+
+@keyframes nextCardPulse {
+    0%, 100% {
+        box-shadow: 0 0 15px rgba(255, 215, 0, 0.7);
+    }
+    50% {
+        box-shadow: 0 0 20px rgba(255, 215, 0, 0.9);
+    }
+}
+
+.combo-path-card.in-hand {
+    background: rgba(100, 200, 255, 0.2);
+    border-color: rgba(100, 200, 255, 0.6);
+}
+
+.path-card-icon {
+    font-size: 20px;
+    line-height: 1;
+}
+
+.path-card-name {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.95);
+    font-weight: 600;
+    white-space: nowrap;
+    text-align: center;
+}
+
+/* 新设计的进度条 */
+.combo-guide-progress-new {
+    padding: 4px 0;
+    flex-shrink: 0; /* 不收缩，保持固定高度 */
+    position: relative;
+    z-index: 1; /* 确保内容在高光之上 */
+}
+
+.combo-progress-bar {
+    display: flex;
+    gap: 4px;
+    height: 6px;
+}
+
+.progress-segment {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    background: rgba(100, 150, 255, 0.3);
+    border-radius: 3px;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+}
+
+.progress-segment.completed {
+    background: linear-gradient(90deg, rgba(100, 150, 255, 0.8), rgba(150, 200, 255, 0.8));
+    box-shadow: 0 0 8px rgba(100, 150, 255, 0.6);
+    animation: progressPulse 1s ease infinite;
+}
+
+@keyframes progressPulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+/* 隐藏路径滚动条 */
+.combo-guide-path-new::-webkit-scrollbar {
+    height: 4px;
+}
+
+.combo-guide-path-new::-webkit-scrollbar-track {
+    background: rgba(22, 27, 34, 0.5);
+    border-radius: 10px;
+}
+
+.combo-guide-path-new::-webkit-scrollbar-thumb {
+    background: rgba(88, 166, 255, 0.5);
+    border-radius: 10px;
+}
+
+/* 响应式设计 */
+@media (max-width: 1400px) {
+    .combo-guide-container {
+        width: 320px !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .combo-guide-container {
+        width: calc(100vw - 20px) !important;
+        max-width: 300px !important;
+        padding: 6px 10px !important;
+    }
+    
+    .combo-path-card {
+        min-width: 45px;
+        min-height: 45px;
+        padding: 4px 6px;
+    }
+    
+    .path-card-icon {
+        font-size: 18px;
+    }
+    
+    .path-card-name {
+        font-size: 10px;
+    }
+}
+
+/* 移除旧的紧凑布局样式，因为不再需要 */
+.combo-guide-container.compact-layout .combo-guide-item {
+    /* 保持默认样式，不再切换 */
+}
