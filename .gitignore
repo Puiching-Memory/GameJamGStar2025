@@ -29,6 +29,9 @@ build/
 # Assets
 assets/
 
+# Database
+*.db
+
 # Environment variables
 .env
 .env.local
