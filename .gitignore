@@ -28,6 +28,7 @@ build/
 
 # Assets
 assets/
+server/audio/
 
 # Database
 *.db

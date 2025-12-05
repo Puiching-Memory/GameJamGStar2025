@@ -197,3 +197,68 @@ uv sync --upgrade
 # 查看依赖树
 uv tree
 ```
+
+## 打包为 Windows exe
+
+使用 PyInstaller 将服务器打包为独立的 exe 文件：
+
+### 方法一：使用打包脚本（推荐）
+
+```bash
+cd server
+build_exe.bat
+```
+
+打包完成后，exe 文件位于 `dist/server/server.exe`，所有依赖文件在 `dist/server/_internal/` 目录中。
+
+### 方法二：手动打包
+
+1. **安装 PyInstaller**：
+   ```bash
+   pip install pyinstaller
+   ```
+
+2. **执行打包**：
+   ```bash
+   cd server
+   pyinstaller server.spec
+   ```
+
+### 打包后的使用
+
+1. **配置文件**：
+   - 将 `env.example` 复制为 `.env`（与 exe 同目录）
+   - 或设置环境变量 `DASHSCOPE_API_KEY`
+
+2. **静态文件**：
+   - 如果打包时 `dist` 目录存在，静态文件已包含在 `dist/server/dist/` 目录中
+   - 否则需要将游戏构建后的 `dist` 目录放在 `dist/server/` 目录下
+
+3. **运行**：
+   ```bash
+   dist\server\server.exe
+   ```
+
+### 打包配置说明
+
+- `server.spec`：PyInstaller 配置文件
+- 打包模式：目录模式（one-folder）
+  - exe 文件位于 `dist/server/server.exe`
+  - 所有依赖库位于 `dist/server/_internal/` 目录
+  - 数据文件位于 `dist/server/` 目录
+- 打包时会自动包含：
+  - 所有 Python 依赖
+  - `.env` 示例文件
+  - `dist` 目录（如果存在）
+- 目录模式的优点：
+  - 启动速度更快
+  - 文件结构清晰
+  - 便于调试和维护
+
+### 注意事项
+
+1. 首次打包可能需要较长时间（5-10分钟）
+2. 打包后的目录包含所有依赖文件，总大小约 50-100MB
+3. 分发时需要将整个 `dist/server/` 目录一起分发
+4. 如果遇到模块导入错误，可以在 `server.spec` 的 `hiddenimports` 中添加缺失的模块
+5. 建议在打包前先测试运行 `python run.py` 确保一切正常

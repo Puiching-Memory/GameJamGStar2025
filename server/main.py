@@ -16,7 +16,13 @@ import asyncio
 
 # 加载 .env 文件（如果存在）
 from dotenv import load_dotenv
-env_path = Path(__file__).parent / '.env'
+# 在 PyInstaller 打包后的环境中，.env 文件应该与 exe 文件在同一目录
+if getattr(sys, 'frozen', False):
+    # 打包后的环境：.env 文件应该在 exe 文件所在目录
+    env_path = Path(sys.executable).parent / '.env'
+else:
+    # 开发环境：.env 文件在脚本所在目录
+    env_path = Path(__file__).parent / '.env'
 if env_path.exists():
     load_dotenv(env_path)
 
@@ -28,14 +34,40 @@ from dashscope.audio.tts_v2 import SpeechSynthesizer
 import httpx
 
 # 导入 Memori（用于解说记忆功能）
-from memori import Memori
+# 临时禁用 memori 库（打包时 tiktoken 编码问题）
+# from memori import Memori
 
 # 导入 OpenAI 客户端（用于 DashScope 兼容接口）
 from openai import OpenAI
 
 # 获取项目根目录
-BASE_DIR = Path(__file__).parent.parent
-DIST_DIR = BASE_DIR / "dist"
+# 在 PyInstaller 打包后的环境中，使用 sys._MEIPASS 获取资源路径
+if getattr(sys, 'frozen', False):
+    # 打包后的环境
+    # sys._MEIPASS 是 PyInstaller 临时解压目录（_internal 目录）
+    # 数据文件会被放在这里
+    BASE_DIR = Path(sys._MEIPASS)
+    # 在打包后的环境中，dist 目录应该在 _internal/dist（PyInstaller 数据文件位置）
+    DIST_DIR = BASE_DIR / "dist"
+    if not DIST_DIR.exists():
+        # 如果 _internal/dist 不存在，检查与 exe 同级的 dist
+        # sys.executable 是 exe 文件路径
+        exe_dir = Path(sys.executable).parent
+        DIST_DIR = exe_dir / "dist"
+    # 调试信息
+    print(f"[路径调试] 打包模式: 是")
+    print(f"[路径调试] sys._MEIPASS: {sys._MEIPASS}")
+    print(f"[路径调试] sys.executable: {sys.executable}")
+    print(f"[路径调试] BASE_DIR: {BASE_DIR}")
+    print(f"[路径调试] DIST_DIR: {DIST_DIR}")
+    print(f"[路径调试] DIST_DIR.exists(): {DIST_DIR.exists()}")
+else:
+    # 开发环境
+    BASE_DIR = Path(__file__).parent.parent
+    DIST_DIR = BASE_DIR / "dist"
+    print(f"[路径调试] 打包模式: 否")
+    print(f"[路径调试] DIST_DIR: {DIST_DIR}")
+    print(f"[路径调试] DIST_DIR.exists(): {DIST_DIR.exists()}")
 
 # 环境变量配置
 # 默认使用 cosyvoice-v3-flash + longanzhi_v3，如需调整可在 .env 中覆盖
@@ -45,8 +77,9 @@ COSYVOICE_VOICE = os.getenv("COSYVOICE_VOICE", "longanzhi_v3")
 COSYVOICE_SPEECH_RATE = float(os.getenv("COSYVOICE_SPEECH_RATE", "1.0"))  # 语速：1.0为默认正常语速
 
 # Memori 配置
+# 临时禁用 memori 库（打包时 tiktoken 编码问题）
 MEMORI_DATABASE = os.getenv("MEMORI_DATABASE", "sqlite:///./commentary_memory.db")  # 默认使用 SQLite
-MEMORI_ENABLED = os.getenv("MEMORI_ENABLED", "true").lower() == "true"  # 是否启用 Memori
+MEMORI_ENABLED = False  # 临时禁用：os.getenv("MEMORI_ENABLED", "true").lower() == "true"  # 是否启用 Memori
 MEMORI_NAMESPACE = os.getenv("MEMORI_NAMESPACE", "git-card-game")  # 记忆命名空间，用于跨游戏局共享记忆
 
 # 初始化 OpenAI 客户端（用于 DashScope 兼容接口）
@@ -58,30 +91,35 @@ if DASHSCOPE_API_KEY:
     )
 
 # 初始化 Memori（用于解说记忆）
+# 临时禁用 memori 库（打包时 tiktoken 编码问题）
 memori = None
-if MEMORI_ENABLED:
-    try:
-        memori = Memori(
-            database_connect=MEMORI_DATABASE,
-            conscious_ingest=True,  # 短期工作记忆
-            auto_ingest=True,       # 动态搜索
-            namespace=MEMORI_NAMESPACE  # 使用固定命名空间，实现跨游戏局记忆
-        )
-        memori.enable()
-        print(f"✓ Memori 记忆系统已启用")
-        print(f"  - 命名空间: {MEMORI_NAMESPACE}")
-        print(f"  - 数据库: {MEMORI_DATABASE}")
-        print(f"  - 短期工作记忆: 启用 (conscious_ingest=True)")
-        print(f"  - 自动存储: 启用 (auto_ingest=True)")
-        print(f"  - 跨游戏局记忆: 是（使用固定命名空间）")
-    except Exception as e:
-        print(f"✗ Memori 记忆系统初始化失败: {e}")
-        import traceback
-        print(traceback.format_exc())
-        memori = None
-        MEMORI_ENABLED = False
-else:
-    print("ℹ️ Memori 记忆系统未启用（MEMORI_ENABLED=false）")
+# if MEMORI_ENABLED:
+#     try:
+#         memori = Memori(
+#             database_connect=MEMORI_DATABASE,
+#             conscious_ingest=True,  # 短期工作记忆
+#             auto_ingest=True,       # 动态搜索
+#             namespace=MEMORI_NAMESPACE  # 使用固定命名空间，实现跨游戏局记忆
+#         )
+#         memori.enable()
+#         print(f"✓ Memori 记忆系统已启用")
+#         print(f"  - 命名空间: {MEMORI_NAMESPACE}")
+#         print(f"  - 数据库: {MEMORI_DATABASE}")
+#         print(f"  - 短期工作记忆: 启用 (conscious_ingest=True)")
+#         print(f"  - 自动存储: 启用 (auto_ingest=True)")
+#         print(f"  - 跨游戏局记忆: 是（使用固定命名空间）")
+#     except Exception as e:
+#         print(f"✗ Memori 记忆系统初始化失败: {e}")
+#         import traceback
+#         print(traceback.format_exc())
+#         memori = None
+#         MEMORI_ENABLED = False
+# else:
+#     print("ℹ️ Memori 记忆系统未启用（MEMORI_ENABLED=false）")
+
+# 临时禁用 memori 库（打包时 tiktoken 编码问题）
+# 由于 memori 已被禁用，显示提示信息
+print("ℹ️ Memori 记忆系统已临时禁用（打包时 tiktoken 编码问题）")
 
 # 初始化 FastAPI 应用
 app = FastAPI(
